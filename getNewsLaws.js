@@ -23,7 +23,12 @@ function getMonthNumber(month) {
 }
 
 async function scrapeNews() {
-    const browser = await puppeteer.launch({ headless: 'new' }); // Use o novo modo headless
+    const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox'],
+        defaultViewport: null,
+        timeout: 120000 // Aumenta o timeout para 120 segundos
+    });
     const credentialsPath = path.join(__dirname, 'api', 'electric-wave-426309-u0-1bd8b45883b7.json');
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
     const auth = new google.auth.GoogleAuth({
