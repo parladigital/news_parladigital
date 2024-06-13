@@ -2,7 +2,7 @@ name: Scrape News
 
 on:
   schedule:
-    - cron: '5 16 * * *'
+    - cron: '10 16 * * *'
   workflow_dispatch:
 
 jobs:
