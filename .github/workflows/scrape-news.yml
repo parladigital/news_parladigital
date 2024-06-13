@@ -28,4 +28,4 @@ jobs:
     - name: Run scraping script
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-      run: node getNewsCnn.js
+      run: node getNewsLaws.js

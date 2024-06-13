@@ -1,10 +1,10 @@
 {
     "name": "news_parladigital",
     "version": "1.0.0",
-    "description": "Projeto de scraping de notícias sobre leis trabalhistas",
-    "main": "getNewsCnn.js",
+    "description": "Projeto de scraping de notícias",
+    "main": "getNewsLaws.js",
     "scripts": {
-      "start": "node getNewsCnn.js"
+      "start": "node getNewsLaws.js"
     },
     "dependencies": {
       "puppeteer": "^20.4.0",
