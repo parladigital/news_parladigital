@@ -1,0 +1,16 @@
+{
+    "name": "news_parladigital",
+    "version": "1.0.0",
+    "description": "Projeto de scraping de notícias sobre leis trabalhistas",
+    "main": "getNewsCnn.js",
+    "scripts": {
+      "start": "node getNewsCnn.js"
+    },
+    "dependencies": {
+      "puppeteer": "^20.4.0",
+      "googleapis": "^105.0.0"
+    },
+    "author": "Parla Digital",
+    "license": "ISC"
+  }
+  
