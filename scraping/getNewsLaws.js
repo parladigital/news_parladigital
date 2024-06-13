@@ -41,20 +41,35 @@ async function scrapeNews() {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
+    // Buscar as notícias existentes na planilha
+    const existingNews = await getExistingNews(sheets, spreadsheetId, rangeName);
+
     console.log('Scraping CNN Brasil...');
-    await scrapeSite(browser, 'https://www.cnnbrasil.com.br/tudo-sobre/leis-trabalhistas/', 'a.home__list__tag', 'h1.post__title', 'span.post__data', 'div.post__content', 'CNN Brasil', sheets, spreadsheetId, rangeName, sixMonthsAgo);
+    await scrapeSite(browser, 'https://www.cnnbrasil.com.br/tudo-sobre/leis-trabalhistas/', 'a.home__list__tag', 'h1.post__title', 'span.post__data', 'div.post__content', 'CNN Brasil', sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews);
 
     console.log('Scraping G1...');
-    await scrapeSite(browser, 'https://g1.globo.com/tudo-sobre/clt/', 'a.feed-post-link', 'h1.content-head__title', 'time', 'div.mc-article-body', 'G1', sheets, spreadsheetId, rangeName, sixMonthsAgo);
+    await scrapeSite(browser, 'https://g1.globo.com/tudo-sobre/clt/', 'a.feed-post-link', 'h1.content-head__title', 'time', 'div.mc-article-body', 'G1', sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews);
 
     console.log('Scraping Exame...');
-    await scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsAgo);
+    await scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews);
 
     await browser.close();
     console.log('Scraping completed.');
 }
 
-async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsAgo) {
+async function getExistingNews(sheets, spreadsheetId, rangeName) {
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: rangeName,
+    });
+    const rows = res.data.values;
+    if (!rows || rows.length === 0) {
+        return [];
+    }
+    return rows.map(row => row[2]); // retorna a lista de links das notícias
+}
+
+async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3');
     
@@ -82,6 +97,11 @@ async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsA
     console.log('Exame news links found:', newsLinks.length);
 
     for (const newsUrl of newsLinks) {
+        if (existingNews.includes(newsUrl)) {
+            console.log(`Skipping duplicate news: ${newsUrl}`);
+            continue;
+        }
+
         await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumenta o timeout para 60 segundos
         await delay(3000);
 
@@ -113,7 +133,10 @@ async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsA
                     dateStr = `${year}-${month}-${day}`;
                 }
             }
-            const content = document.querySelector('div#news-body')?.innerText.trim();
+
+            const contentElements = document.querySelectorAll('#news-body p');
+            const content = Array.from(contentElements).map(el => el.innerText.trim()).join('\n');
+
             return [title, dateStr, content];
         });
 
@@ -131,7 +154,7 @@ async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsA
     }
 }
 
-async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelector, contentSelector, source, sheets, spreadsheetId, rangeName, sixMonthsAgo) {
+async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelector, contentSelector, source, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumenta o timeout para 60 segundos
     await delay(5000);
@@ -140,6 +163,11 @@ async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelecto
     console.log(`${source} news links found:`, newsLinks.length);
 
     for (const newsUrl of newsLinks) {
+        if (existingNews.includes(newsUrl)) {
+            console.log(`Skipping duplicate news: ${newsUrl}`);
+            continue;
+        }
+
         await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumenta o timeout para 60 segundos
         await delay(3000);
 

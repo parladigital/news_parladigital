@@ -2,7 +2,7 @@ name: Scrape News
 
 on:
   schedule:
-    - cron: '55 19 * * *'
+    - cron: '00 11 * * *'
   workflow_dispatch:
 
 jobs:
@@ -29,4 +29,4 @@ jobs:
     - name: Run scraping script
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-      run: node getNewsLaws.js
+      run: node scraping/getNewsLaws.js
