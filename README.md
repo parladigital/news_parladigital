@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# news_parladigital
-=======
 # Scraiping de Notícias
  
  Este projeto é uma ferramenta de web scraping que extrai notícias relacionadas a "leis trabalhistas", por exemplo, de vários sites e carrega os dados em uma planilha do Google Sheets para armazenamento de dados.
