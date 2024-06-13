@@ -1,6 +1,6 @@
 # Scraping de Notícias
  
- Este projeto é uma ferramenta de web scraping que extrai notícias relacionadas a "leis trabalhistas", por exemplo, de vários sites e carrega os dados em uma planilha do Google Sheets para armazenamento de dados.
+ Este projeto é uma ferramenta de web scraping que extrai notícias relacionadas a "leis trabalhistas" de vários sites e carrega os dados em uma planilha do Google Sheets para armazenamento de dados.
 
  ## Começando
 
@@ -34,7 +34,7 @@
 Para executar o script e começar a capturar notícias, use o seguinte comando:
 
 ```sh
-node getNewsCnn.js
+node scraping/getNewsLaws.js
 ```
 
 # Como o Código Funciona
@@ -48,6 +48,7 @@ O Script realiza os seguintes passos:
    - Faz scraping das notícias dos sites especificados (CNN Brasil, G1, Exame, TST).
    - Extrai títulos dos artigos, datas de publicação e conteúdo.
    - Filtra artigos publicados nos últimos seis meses.
+   - Evita duplicatas ao verificar se a notícia já está na planilha.
 
 3. **Armazenamento de Dados:**
    - Carrega os dados extraídos em uma planilha do Google Sheets.
@@ -74,16 +75,21 @@ const sheets = google.sheets({ version: 'v4', auth });
 O script contém funções para fazer scraping de notícias de diferentes sites. Aqui está um exemplo da função para a CNN Brasil:
 
 ```sh
-async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelector, contentSelector, source, sheets, spreadsheetId, rangeName, sixMonthsAgo) {
+async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelector, contentSelector, source, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle2' });
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
     await delay(5000);
 
     const newsLinks = await page.$$eval(linkSelector, links => links.map(link => link.href));
     console.log(`${source} news links found:`, newsLinks.length);
 
     for (const newsUrl of newsLinks) {
-        await page.goto(newsUrl, { waitUntil: 'networkidle2' });
+        if (existingNews.includes(newsUrl)) {
+            console.log(`Skipping duplicate news: ${newsUrl}`);
+            continue;
+        }
+
+        await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 });
         await delay(3000);
 
         const [title, dateStr, content] = await page.evaluate((titleSelector, dateSelector, contentSelector) => {
@@ -130,7 +136,7 @@ Para usar a API do Google Sheets, você precisa de um projeto no Google Cloud Pl
 2. Crie um novo projeto.
 3. Habilite a API do Google Sheets para o seu projeto.
 4. Crie uma conta de serviço e baixe o arquivo JSON de credenciais.
-5. Coloque o arquivo JSON na pasta api e renomeie-o para electric-wave-426309-u0-1bd8b45883b7.json.
+5. Coloque o arquivo JSON na pasta api e renomeie-o para "electric-wave-426309-u0-1bd8b45883b7.json".
 
 ## Autenticação
 O script usa as credenciais da conta de serviço para autenticar com a API do Google Sheets:
@@ -154,7 +160,45 @@ Para adicionar suporte a outros sites de notícias, siga estes passos:
 Exemplo:
 ```sh
 console.log('Scraping NewSite...');
-await scrapeSite(browser, 'https://www.newsite.com/news', 'a.news-link', 'h1.news-title', 'time.news-date', 'div.news-content', 'NewSite', sheets, spreadsheetId, rangeName, sixMonthsAgo);
+await scrapeSite(browser, 'https://www.newsite.com/news', 'a.news-link', 'h1.news-title', 'time.news-date', 'div.news-content', 'NewSite', sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews);
+```
+
+# Configuração do Cron Job com GitHub Actions
+ O cron job está configurado para rodar automaticamente todos os dias às 8h da manhã no horário UTC (5h da manhã no horário de Brasília). Aqui está o código do workflow do GitHub Actions:
+
+```sh
+name: Scrape News
+
+on:
+  schedule:
+    - cron: '0 11 * * *' # 8h da manhã no horário UTC (5h da manhã no horário de Brasília)
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libnss3-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon-x11-0 libxcomposite1 libxrandr2 libgbm-dev
+
+    - name: Run scraping script
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      run: node scraping/getNewsLaws.js
 ```
 
 # Acessando a API
@@ -164,4 +208,14 @@ Use as seguintes credenciais para acessar a API:
 - Senha: SuperSucesso2024
 
 Certifique-se de manusear essas credenciais de forma segura e não as expor em repositórios públicos.
->>>>>>> 1682c82 (Create README.md)
+
+### Pontos de Verificação
+
+- Verifique se o caminho do script `scraping/getNewsLaws.js` está correto no GitHub Actions.
+- Certifique-se de que as credenciais da API do Google Sheets estão configuradas corretamente nos segredos do repositório no GitHub.
+
+### Testando e Verificando
+
+- Após fazer commit e push das alterações, monitore a execução do cron job no GitHub Actions e verifique os logs para garantir que o script está rodando conforme esperado.
+- Verifique se os dados estão sendo corretamente adicionados à planilha do Google Sheets sem duplicatas.
+
