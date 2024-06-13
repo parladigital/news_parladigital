@@ -23,7 +23,7 @@ function getMonthNumber(month) {
 }
 
 async function scrapeNews() {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: 'new' }); // Use o novo modo headless
     const credentialsPath = path.join(__dirname, 'api', 'electric-wave-426309-u0-1bd8b45883b7.json');
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
     const auth = new google.auth.GoogleAuth({
@@ -61,7 +61,7 @@ async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsA
     });
 
     const url = "https://exame.com/noticias-sobre/direitos-trabalhistas/";
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumentar o timeout para 60 segundos
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumenta o timeout para 60 segundos
     
     // Esperar um elemento específico para garantir que a página seja carregada
     try {
@@ -77,7 +77,7 @@ async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsA
     console.log('Exame news links found:', newsLinks.length);
 
     for (const newsUrl of newsLinks) {
-        await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumentar o timeout para 60 segundos
+        await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumenta o timeout para 60 segundos
         await delay(3000);
 
         const [title, dateStr, content] = await page.evaluate(() => {
@@ -128,14 +128,14 @@ async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsA
 
 async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelector, contentSelector, source, sheets, spreadsheetId, rangeName, sixMonthsAgo) {
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumentar o timeout para 60 segundos
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumenta o timeout para 60 segundos
     await delay(5000);
 
     const newsLinks = await page.$$eval(linkSelector, links => links.map(link => link.href));
     console.log(`${source} news links found:`, newsLinks.length);
 
     for (const newsUrl of newsLinks) {
-        await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumentar o timeout para 60 segundos
+        await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 }); // Aumenta o timeout para 60 segundos
         await delay(3000);
 
         const [title, dateStr, content] = await page.evaluate((titleSelector, dateSelector, contentSelector) => {
