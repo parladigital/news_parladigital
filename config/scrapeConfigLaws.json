@@ -1,0 +1,30 @@
+{
+    "spreadsheetId": "1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg",
+    "rangeName": "news_marketing!A2:E",
+    "sites": [
+        {
+            "name": "CNN Brasil",
+            "url": "https://www.cnnbrasil.com.br/tudo-sobre/leis-trabalhistas/",
+            "linkSelector": "a.home__list__tag",
+            "titleSelector": "h1.post__title",
+            "dateSelector": "span.post__data",
+            "contentSelector": "div.post__content"
+        },
+        {
+            "name": "G1",
+            "url": "https://g1.globo.com/tudo-sobre/clt/",
+            "linkSelector": "a.feed-post-link",
+            "titleSelector": "h1.content-head__title",
+            "dateSelector": "time",
+            "contentSelector": "div.mc-article-body"
+        },
+        {
+            "name": "Exame",
+            "url": "https://exame.com/noticias-sobre/direitos-trabalhistas/",
+            "linkSelector": "a.touch-area",
+            "titleSelector": "h1.headline-large",
+            "dateSelector": "p.body-small",
+            "contentSelector": "#news-body p, #news-body div"
+        }
+    ]
+}

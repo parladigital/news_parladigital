@@ -1,7 +1,6 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
 const fs = require('fs');
-const path = require('path');
 
 // Função para mapear os meses
 function getMonthNumber(month) {
@@ -134,7 +133,7 @@ async function scrapeExame(browser, sheets, spreadsheetId, rangeName, sixMonthsA
                 }
             }
 
-            const contentElements = document.querySelectorAll('#news-body p');
+            const contentElements = document.querySelectorAll('#news-body p, #news-body div');
             const content = Array.from(contentElements).map(el => el.innerText.trim()).join('\n');
 
             return [title, dateStr, content];
