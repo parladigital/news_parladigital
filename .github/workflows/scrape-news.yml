@@ -2,7 +2,7 @@ name: Scrape News
 
 on:
   schedule:
-    - cron: '00 11 * * *'
+    - cron: '0 11 * * *'
   workflow_dispatch:
 
 jobs:
@@ -25,6 +25,9 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libnss3-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon-x11-0 libxcomposite1 libxrandr2 libgbm-dev
+
+    - name: Copy credentials
+      run: echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
 
     - name: Run scraping script
       env:

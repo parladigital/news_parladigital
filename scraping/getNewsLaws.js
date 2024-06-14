@@ -29,7 +29,7 @@ async function scrapeNews() {
         defaultViewport: null,
         timeout: 120000 // Aumenta o timeout para 120 segundos
     });
-    const credentialsPath = path.join(__dirname, 'api', 'electric-wave-426309-u0-1bd8b45883b7.json');
+    const credentialsPath = path.join(__dirname, '../api/electric-wave-426309-u0-1bd8b45883b7.json');
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
     const auth = new google.auth.GoogleAuth({
         credentials,
