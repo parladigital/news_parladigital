@@ -45,6 +45,7 @@ async function getExistingNews(sheets, spreadsheetId, rangeName) {
 
 async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
+    console.log(`Navigating to ${site.url}`);
     try {
         const response = await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 });
         if (!response || !response.ok()) {
@@ -53,6 +54,7 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
         }
         await page.waitForTimeout(5000);
 
+        await page.waitForSelector(site.linkSelector, { timeout: 30000 });
         const newsLinks = await page.$$eval(site.linkSelector, links => links.map(link => link.href));
         console.log(`${site.name} news links found:`, newsLinks.length);
 
@@ -61,9 +63,9 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 console.log(`Skipping duplicate news: ${newsUrl}`);
                 continue;
             }
-
-            const pageDetails = await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 });
-            if (!pageDetails || !pageDetails.ok()) {
+            console.log(`Processing news URL: ${newsUrl}`);
+            const detailResponse = await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 });
+            if (!detailResponse || !detailResponse.ok()) {
                 console.log(`Failed to load details page: ${newsUrl}`);
                 continue;
             }
@@ -96,6 +98,7 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                     resource: { values }
                 };
                 await sheets.spreadsheets.values.append(request);
+                console.log(`Data appended for ${site.name}`);
             }
         }
     } catch (error) {
