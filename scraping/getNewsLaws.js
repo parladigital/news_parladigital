@@ -46,7 +46,11 @@ async function getExistingNews(sheets, spreadsheetId, rangeName) {
 async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
     try {
-        await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumentado o timeout para 90 segundos
+        const response = await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 });
+        if (!response || !response.ok()) {
+            console.log(`Failed to load ${site.url}`);
+            return;
+        }
         await page.waitForTimeout(5000);
 
         const newsLinks = await page.$$eval(site.linkSelector, links => links.map(link => link.href));
@@ -58,20 +62,29 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 continue;
             }
 
-            try {
-                await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 }); // Timeout ajustado para 90 segundos
-                await page.waitForTimeout(3000);
-            } catch (error) {
-                console.log(`Timeout or other error occurred when accessing ${newsUrl}: ${error.message}`);
-                continue; // Continua com o próximo link
+            const pageDetails = await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 });
+            if (!pageDetails || !pageDetails.ok()) {
+                console.log(`Failed to load details page: ${newsUrl}`);
+                continue;
             }
+            await page.waitForTimeout(3000);
 
             const [title, dateStr, content] = await page.evaluate((site) => {
-                const title = document.querySelector(site.titleSelector)?.innerText.trim();
-                const dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime') || document.querySelector(site.dateSelector)?.innerText.trim();
-                const content = document.querySelector(site.contentSelector)?.innerText.trim();
-                return [title, dateStr, content];
+                try {
+                    const title = document.querySelector(site.titleSelector)?.innerText.trim();
+                    const dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime') || document.querySelector(site.dateSelector)?.innerText.trim();
+                    const content = document.querySelector(site.contentSelector)?.innerText.trim();
+                    return [title, dateStr, content];
+                } catch (e) {
+                    console.error(`Error in evaluating page content: ${e.message}`);
+                    return [null, null, null];
+                }
             }, site);
+
+            if (!title || !dateStr || !content) {
+                console.log(`Missing data from ${newsUrl}, skipping...`);
+                continue;
+            }
 
             const newsDate = new Date(dateStr);
             if (newsDate >= sixMonthsAgo) {
@@ -89,5 +102,6 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
         console.error(`Failed to scrape site ${site.name}:`, error);
     }
 }
+
 
 scrapeNews();
