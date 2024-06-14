@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('./config/scrapeConfigLaws.json');  // Novo arquivo de configuração
+const config = require('../config/scrapeConfigLaws.json');  // Novo arquivo de configuração
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
