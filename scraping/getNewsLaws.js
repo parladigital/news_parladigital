@@ -29,8 +29,16 @@ async function scrapeNews() {
         defaultViewport: null,
         timeout: 120000 // Aumenta o timeout para 120 segundos
     });
+
     const credentialsPath = path.join(__dirname, '../api/electric-wave-426309-u0-1bd8b45883b7.json');
-    const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+    let credentials;
+    try {
+        credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+    } catch (error) {
+        console.error('Error reading credentials file:', error);
+        return;
+    }
+
     const auth = new google.auth.GoogleAuth({
         credentials,
         scopes: ['https://www.googleapis.com/auth/spreadsheets']
