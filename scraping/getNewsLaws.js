@@ -1,10 +1,10 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('./config/scrapeConfigLaws.json');  // Assegure-se que este caminho esteja correto
+const config = require('./config/scrapeConfigLaws.json');
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
-        headless: "new",  // Usando o novo modo headless conforme recomendação
+        headless: "new",
         args: ['--no-sandbox'],
         defaultViewport: null,
         timeout: 120000
@@ -19,8 +19,6 @@ async function scrapeNews() {
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-    // Buscar as notícias existentes na planilha
     const existingNews = await getExistingNews(sheets, config.spreadsheetId, config.rangeName);
 
     for (let site of config.sites) {
@@ -35,8 +33,7 @@ async function scrapeNews() {
 async function getExistingNews(sheets, spreadsheetId, rangeName) {
     try {
         const res = await sheets.spreadsheets.values.get({ spreadsheetId, range: rangeName });
-        const rows = res.data.values;
-        return rows ? rows.map(row => row[2]) : [];
+        return res.data.values ? res.data.values.map(row => row[2]) : [];
     } catch (error) {
         console.error('Failed to fetch existing news:', error);
         return [];
@@ -53,7 +50,6 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
             return;
         }
         await page.waitForTimeout(5000);
-
         await page.waitForSelector(site.linkSelector, { timeout: 30000 });
         const newsLinks = await page.$$eval(site.linkSelector, links => links.map(link => link.href));
         console.log(`${site.name} news links found:`, newsLinks.length);
@@ -105,6 +101,5 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
         console.error(`Failed to scrape site ${site.name}:`, error);
     }
 }
-
 
 scrapeNews();
