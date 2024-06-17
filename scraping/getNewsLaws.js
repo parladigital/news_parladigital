@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('./config/scrapeConfigLaws.json'); // Garanta que o caminho está correto
+const config = require('./config/scrapeConfigLaws.json');
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
@@ -19,7 +19,6 @@ async function scrapeNews() {
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
     const existingNews = await getExistingNews(sheets, config.spreadsheetId, config.rangeName);
 
     for (let site of config.sites) {
@@ -68,12 +67,15 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 return [title, dateStr, content];
             }, site);
 
+            console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`); // Log first 50 characters of content
+
             if (!title || !dateStr || !content) {
                 console.log(`Missing data from ${newsUrl}, skipping...`);
                 continue;
             }
 
             const newsDate = new Date(dateStr);
+            console.log(`Converted Date: ${newsDate}`);
             if (newsDate >= sixMonthsAgo) {
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
                 const request = {
@@ -84,6 +86,8 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 };
                 await sheets.spreadsheets.values.append(request);
                 console.log(`Data appended for ${site.name}`);
+            } else {
+                console.log(`News date is not within the last six months: ${newsDate}`);
             }
         }
     } catch (error) {
