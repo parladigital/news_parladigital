@@ -3,30 +3,25 @@ const { google } = require('googleapis');
 const config = require('./config/scrapeConfigLaws.json');
 
 function parseDate(dateStr) {
+    // Tentativa de capturar e converter datas ISO e formatos brasileiros diretamente
     let date = new Date(dateStr);
-    if (!isNaN(date)) return date;
+    if (!isNaN(date.getTime())) return date;
 
-    if (dateStr.includes('Publicado em')) {
-        // Tenta extrair a data no formato "Publicado em 14 de junho de 2024 às 08h00."
-        const regex = /(\d{1,2}) de (\w+) de (\d{4})/;
-        const match = dateStr.match(regex);
-        if (match) {
-            const day = match[1];
-            const month = getMonthFromString(match[2]);
-            const year = match[3];
-            date = new Date(`${year}-${month}-${day}`);
-            if (!isNaN(date)) return date;
-        }
-    }
-    return 'Invalid Date';
-}
-
-function getMonthFromString(month) {
+    // Tentativa de extrair datas de formatos textuais mais complexos
     const months = {
         janeiro: '01', fevereiro: '02', março: '03', abril: '04', maio: '05', junho: '06',
         julho: '07', agosto: '08', setembro: '09', outubro: '10', novembro: '11', dezembro: '12'
     };
-    return months[month.toLowerCase()];
+    const regex = /(\d{1,2}) de (\w+) de (\d{4})/;
+    const matches = dateStr.match(regex);
+    if (matches) {
+        const year = matches[3];
+        const month = months[matches[2].toLowerCase()];
+        const day = matches[1];
+        return new Date(`${year}-${month}-${day}`);
+    }
+
+    return 'Invalid Date';
 }
 
 async function scrapeNews() {
@@ -94,7 +89,7 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 return [title, dateStr, content];
             }, site);
 
-            console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`); // Log first 50 characters of content
+            console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`);
 
             const newsDate = parseDate(dateStr);
             console.log(`Converted Date: ${newsDate}`);
