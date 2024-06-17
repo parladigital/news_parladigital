@@ -1,6 +1,29 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('./config/scrapeConfigLaws.json');
+const config = require('./config/scrapeConfigLaws.json'); // Garanta que o caminho está correto
+
+// Função para interpretar diferentes formatos de datas
+function parseDate(dateStr) {
+    let date = new Date(dateStr);
+    if (!isNaN(date)) return date;
+
+    if (dateStr.includes('às')) {
+        let parts = dateStr.split(' às ')[0].split('/');
+        date = new Date(parts[2], parts[1] - 1, parts[0]);
+        if (!isNaN(date)) return date;
+    } else if (dateStr.includes('Publicado em')) {
+        let parts = dateStr.match(/(\d{1,2}) de (\w+) de (\d{4})/);
+        if (parts) {
+            const months = {
+                janeiro: 0, fevereiro: 1, março: 2, abril: 3, maio: 4, junho: 5,
+                julho: 6, agosto: 7, setembro: 8, outubro: 9, novembro: 10, dezembro: 11
+            };
+            date = new Date(parts[3], months[parts[2].toLowerCase()], parts[1]);
+            if (!isNaN(date)) return date;
+        }
+    }
+    return 'Invalid Date';
+}
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
@@ -67,16 +90,11 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 return [title, dateStr, content];
             }, site);
 
-            console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`); // Log first 50 characters of content
+            console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`);
 
-            if (!title || !dateStr || !content) {
-                console.log(`Missing data from ${newsUrl}, skipping...`);
-                continue;
-            }
-
-            const newsDate = new Date(dateStr);
+            const newsDate = parseDate(dateStr);
             console.log(`Converted Date: ${newsDate}`);
-            if (newsDate >= sixMonthsAgo) {
+            if (newsDate != 'Invalid Date' && newsDate >= sixMonthsAgo) {
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
                 const request = {
                     spreadsheetId: config.spreadsheetId,
