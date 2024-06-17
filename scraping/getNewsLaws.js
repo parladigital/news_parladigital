@@ -1,29 +1,32 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('./config/scrapeConfigLaws.json'); // Garanta que o caminho está correto
+const config = require('./config/scrapeConfigLaws.json');
 
-// Função para interpretar diferentes formatos de datas
 function parseDate(dateStr) {
     let date = new Date(dateStr);
     if (!isNaN(date)) return date;
 
-    if (dateStr.includes('às')) {
-        let parts = dateStr.split(' às ')[0].split('/');
-        date = new Date(parts[2], parts[1] - 1, parts[0]);
-        if (!isNaN(date)) return date;
-    } else if (dateStr.includes('Publicado em')) {
-        // Ajustando a extração para o formato "Publicado em 14 de junho de 2024 às 08h00."
-        let parts = dateStr.match(/(\d{1,2}) de (\w+) de (\d{4})/);
-        if (parts) {
-            const months = {
-                janeiro: 0, fevereiro: 1, março: 2, abril: 3, maio: 4, junho: 5,
-                julho: 6, agosto: 7, setembro: 8, outubro: 9, novembro: 10, dezembro: 11
-            };
-            date = new Date(parts[3], months[parts[2].toLowerCase()], parts[1]);
+    if (dateStr.includes('Publicado em')) {
+        // Tenta extrair a data no formato "Publicado em 14 de junho de 2024 às 08h00."
+        const regex = /(\d{1,2}) de (\w+) de (\d{4})/;
+        const match = dateStr.match(regex);
+        if (match) {
+            const day = match[1];
+            const month = getMonthFromString(match[2]);
+            const year = match[3];
+            date = new Date(`${year}-${month}-${day}`);
             if (!isNaN(date)) return date;
         }
     }
     return 'Invalid Date';
+}
+
+function getMonthFromString(month) {
+    const months = {
+        janeiro: '01', fevereiro: '02', março: '03', abril: '04', maio: '05', junho: '06',
+        julho: '07', agosto: '08', setembro: '09', outubro: '10', novembro: '11', dezembro: '12'
+    };
+    return months[month.toLowerCase()];
 }
 
 async function scrapeNews() {
@@ -84,18 +87,18 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
             await page.waitForTimeout(3000);
 
             const [title, dateStr, content] = await page.evaluate((site) => {
-                const title = document.querySelector(site.titleSelector)?.innerText.trim();
+                const title = document.querySelector(site.titleSelector)?.innerText.trim() || 'No title found';
                 const dateElement = document.querySelector(site.dateSelector);
-                const dateStr = dateElement ? dateElement.getAttribute('datetime') || dateElement.innerText.trim() : '';
-                const content = document.querySelector(site.contentSelector)?.innerText.trim();
+                const dateStr = dateElement ? dateElement.innerText.trim() : 'No date found';
+                const content = document.querySelector(site.contentSelector)?.innerText.trim() || 'No content found';
                 return [title, dateStr, content];
             }, site);
 
-            console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`);
+            console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`); // Log first 50 characters of content
 
             const newsDate = parseDate(dateStr);
             console.log(`Converted Date: ${newsDate}`);
-            if (newsDate != 'Invalid Date' && newsDate >= sixMonthsAgo) {
+            if (newsDate !== 'Invalid Date' && newsDate >= sixMonthsAgo) {
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
                 const request = {
                     spreadsheetId: config.spreadsheetId,
