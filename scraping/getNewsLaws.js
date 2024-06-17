@@ -1,10 +1,10 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('./config/scrapeConfigLaws.json');
+const config = require('./config/scrapeConfigLaws.json'); // Garanta que o caminho está correto
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
-        headless: "new",
+        headless: true,
         args: ['--no-sandbox'],
         defaultViewport: null,
         timeout: 120000
@@ -19,6 +19,8 @@ async function scrapeNews() {
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    // Carregar notícias já existentes para evitar duplicidade
     const existingNews = await getExistingNews(sheets, config.spreadsheetId, config.rangeName);
 
     for (let site of config.sites) {
@@ -44,13 +46,10 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
     console.log(`Navigating to ${site.url}`);
     try {
-        const response = await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 });
-        if (!response || !response.ok()) {
-            console.log(`Failed to load ${site.url}`);
-            return;
-        }
-        await page.waitForTimeout(5000);
+        await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 });
+        await page.waitForTimeout(5000); // espera para garantir o carregamento completo
         await page.waitForSelector(site.linkSelector, { timeout: 30000 });
+        
         const newsLinks = await page.$$eval(site.linkSelector, links => links.map(link => link.href));
         console.log(`${site.name} news links found:`, newsLinks.length);
 
@@ -60,23 +59,15 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 continue;
             }
             console.log(`Processing news URL: ${newsUrl}`);
-            const detailResponse = await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 });
-            if (!detailResponse || !detailResponse.ok()) {
-                console.log(`Failed to load details page: ${newsUrl}`);
-                continue;
-            }
-            await page.waitForTimeout(3000);
+            await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 });
+            await page.waitForTimeout(3000); // espera antes de coletar os dados
 
             const [title, dateStr, content] = await page.evaluate((site) => {
-                try {
-                    const title = document.querySelector(site.titleSelector)?.innerText.trim();
-                    const dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime') || document.querySelector(site.dateSelector)?.innerText.trim();
-                    const content = document.querySelector(site.contentSelector)?.innerText.trim();
-                    return [title, dateStr, content];
-                } catch (e) {
-                    console.error(`Error in evaluating page content: ${e.message}`);
-                    return [null, null, null];
-                }
+                const title = document.querySelector(site.titleSelector)?.innerText.trim();
+                const dateElement = document.querySelector(site.dateSelector);
+                const dateStr = dateElement ? dateElement.getAttribute('datetime') || dateElement.innerText.trim() : '';
+                const content = document.querySelector(site.contentSelector)?.innerText.trim();
+                return [title, dateStr, content];
             }, site);
 
             if (!title || !dateStr || !content) {
