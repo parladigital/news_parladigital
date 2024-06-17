@@ -12,6 +12,7 @@ function parseDate(dateStr) {
         date = new Date(parts[2], parts[1] - 1, parts[0]);
         if (!isNaN(date)) return date;
     } else if (dateStr.includes('Publicado em')) {
+        // Ajustando a extração para o formato "Publicado em 14 de junho de 2024 às 08h00."
         let parts = dateStr.match(/(\d{1,2}) de (\w+) de (\d{4})/);
         if (parts) {
             const months = {
