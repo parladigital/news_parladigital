@@ -34,7 +34,7 @@ jobs:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
         echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
-        node scraping/getNewsMarketing.js
+        node scraping/getNewsIotM2m.js
 
     - name: Upload error logs
       if: failure()

@@ -4,32 +4,50 @@ const fs = require('fs');
 
 const sites = [
     {
-        name: 'CNN Brasil',
-        url: 'https://www.cnnbrasil.com.br/tudo-sobre/leis-trabalhistas/',
-        linkSelector: 'a.home__list__tag',
-        titleSelector: 'h1.post__title',
-        dateSelector: 'span.post__data',
-        contentSelector: 'div.post__content',
-        dateFormat: 'dd/MM/yyyy às HH:mm'
+        name: 'IoT Now',
+        url: 'https://www.iot-now.com/news/',
+        linkSelector: 'h2.category__title',
+        titleSelector: 'h1.entry-title',
+        dateSelector: 'time.entry-date',
+        contentSelector: 'div.article__content',
+        dateFormat: 'text'
     },
     {
-        name: 'G1',
-        url: 'https://g1.globo.com/tudo-sobre/clt/',
-        linkSelector: 'a.feed-post-link',
-        titleSelector: 'h1.content-head__title',
-        dateSelector: 'time',
-        contentSelector: 'div.mc-article-body',
-        dateFormat: 'datetime'
+        name: 'IoT For All',
+        url: 'https://www.iotforall.com/articles',
+        linkSelector: 'a.vari_filter_inner',
+        titleSelector: 'h1.ih1_seo_heading descus_title',
+        dateSelector: 'time.entry-date',
+        contentSelector: 'div.td-post-content',
+        dateFormat: 'text'
     },
     {
         name: 'Exame',
-        url: 'https://exame.com/noticias-sobre/direitos-trabalhistas/',
+        url: 'https://exame.com/noticias-sobre/internet-das-coisas-iot/',
         linkSelector: 'a.touch-area',
         titleSelector: 'h1.headline-large',
         dateSelector: 'p.body-small',
         contentSelector: '#news-body p, #news-body div',
         dateFormat: 'Publicado em d mmm yyyy às HH:mm'
-    }
+    },
+    {
+        name: 'Coin telegraph',
+        url: 'https://br.cointelegraph.com/tags/internet-of-things',
+        linkSelector: '.post-card-inline__header a',
+        titleSelector: 'h1.post__title',
+        dateSelector: '.post-meta__publish-date time',
+        contentSelector: 'div.post-content relative',
+        dateFormat: 'text'
+    },
+    {
+        name: 'Tec Mundo',
+        url: 'https://www.tecmundo.com.br/internet-das-coisas',
+        linkSelector: '.tec--card__title__link',
+        titleSelector: 'h1.tec--article__header__title',
+        dateSelector: '#js-article-date strong',
+        contentSelector: 'div.tec--article__body',
+        dateFormat: 'datetime'
+    },
 ];
 
 async function scrapeNews() {
@@ -47,7 +65,7 @@ async function scrapeNews() {
     });
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg';
-    const rangeName = 'news_labor_rights!A2:E';
+    const rangeName = 'news_m2m_iot!A2:E';
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -110,27 +128,51 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
                         'setembro': '09',
                         'outubro': '10',
                         'novembro': '11',
-                        'dezembro': '12'
+                        'dezembro': '12',
+                        'jan': '01',
+                        'feb': '02',
+                        'mar': '03',
+                        'apr': '04',
+                        'may': '05',
+                        'jun': '06',
+                        'jul': '07',
+                        'aug': '08',
+                        'sep': '09',
+                        'oct': '10',
+                        'nov': '11',
+                        'dec': '12'
                     };
                     return months[month.toLowerCase()];
                 }
 
                 const title = document.querySelector(site.titleSelector)?.innerText.trim();
                 let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
-                if (site.name === 'CNN Brasil') {
-                    const match = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+
+                if (site.name === 'IoT Now' || site.name === 'IoT For All') {
+                    const match = dateStr.match(/(\w+) (\d{2}), (\d{4})/);
                     if (match) {
-                        dateStr = `${match[3]}-${match[2]}-${match[1]}`;
+                        const [month, day, year] = [getMonthNumber(match[1]), match[2], match[3]];
+                        dateStr = `${year}-${month}-${day}`;
                     }
-                } else if (site.name === 'G1') {
-                    dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime');
                 } else if (site.name === 'Exame') {
                     const match = dateStr.match(/Publicado em (\d{1,2}) de (\w+) de (\d{4}) às (\d{2}h\d{2})/);
                     if (match) {
                         const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
                         dateStr = `${year}-${month}-${day}`;
                     }
+                } else if (site.name === 'Coin telegraph') {
+                    const match = dateStr.match(/(\d{2}) (\w{3}) (\d{4})/);
+                    if (match) {
+                        const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
+                        dateStr = `${year}-${month}-${day}`;
+                    }
+                } else if (site.name === 'Tec Mundo') {
+                    const match = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (match) {
+                        dateStr = `${match[3]}-${match[2]}-${match[1]}`;
+                    }
                 }
+
                 const content = Array.from(document.querySelectorAll(site.contentSelector))
                     .map(el => el.innerText.trim()).join('\n');
                 return [title, dateStr, content];
@@ -141,6 +183,10 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
             console.log(`Converted news date: ${newsDate}`);
             console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
             if (newsDate >= sixMonthsAgo) {
+                if (content.length > 50000) {
+                    console.log(`Skipping news from ${newsUrl} due to content length exceeding 50000 characters.`);
+                    continue;
+                }
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
                 const request = {
                     spreadsheetId,

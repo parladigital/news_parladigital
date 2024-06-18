@@ -110,7 +110,19 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
                         'setembro': '09',
                         'outubro': '10',
                         'novembro': '11',
-                        'dezembro': '12'
+                        'dezembro': '12',
+                        'jan': '01',
+                        'feb': '02',
+                        'mar': '03',
+                        'apr': '04',
+                        'may': '05',
+                        'jun': '06',
+                        'jul': '07',
+                        'aug': '08',
+                        'sep': '09',
+                        'oct': '10',
+                        'nov': '11',
+                        'dec': '12'
                     };
                     return months[month.toLowerCase()];
                 }
