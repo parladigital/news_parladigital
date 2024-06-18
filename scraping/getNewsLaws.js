@@ -32,6 +32,24 @@ const sites = [
     }
 ];
 
+function getMonthNumber(month) {
+    const months = {
+        'janeiro': '01',
+        'fevereiro': '02',
+        'março': '03',
+        'abril': '04',
+        'maio': '05',
+        'junho': '06',
+        'julho': '07',
+        'agosto': '08',
+        'setembro': '09',
+        'outubro': '10',
+        'novembro': '11',
+        'dezembro': '12'
+    };
+    return months[month.toLowerCase()];
+}
+
 async function scrapeNews() {
     const browser = await puppeteer.launch({
         headless: 'new',
@@ -129,8 +147,10 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
                 return [title, dateStr, content];
             }, site);
 
-            console.log(`Processed news from ${newsUrl} with title: ${title}`);
+            console.log(`Processed news from ${newsUrl} with title: ${title} and date: ${dateStr}`);
             const newsDate = new Date(dateStr.split('/').reverse().join('-'));
+            console.log(`Converted news date: ${newsDate}`);
+            console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
             if (newsDate >= sixMonthsAgo) {
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
                 const request = {
