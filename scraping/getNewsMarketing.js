@@ -121,6 +121,10 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
             console.log(`Converted news date: ${newsDate}`);
             console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
             if (newsDate >= sixMonthsAgo) {
+                if (content.length > 50000) {
+                    console.log(`Skipping news from ${newsUrl} due to content length exceeding 50000 characters.`);
+                    continue;
+                }
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
                 const request = {
                     spreadsheetId,
