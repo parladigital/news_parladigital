@@ -3,24 +3,20 @@ const { google } = require('googleapis');
 const config = require('../config/scrapeConfig.json');
 
 function parseDate(dateStr) {
-    // Tentativa de capturar e converter datas ISO e formatos brasileiros diretamente
     let date = new Date(dateStr);
     if (!isNaN(date.getTime())) return date;
 
-    // Tentativa de extrair datas de formatos textuais mais complexos
     const months = {
         janeiro: '01', fevereiro: '02', março: '03', abril: '04', maio: '05', junho: '06',
         julho: '07', agosto: '08', setembro: '09', outubro: '10', novembro: '11', dezembro: '12'
     };
 
-    // Formato: 09/02/2024 às 10:46
     let regex = /(\d{2})\/(\d{2})\/(\d{4}) às \d{2}:\d{2}/;
     let matches = dateStr.match(regex);
     if (matches) {
         return new Date(`${matches[3]}-${matches[2]}-${matches[1]}`);
     }
 
-    // Formato: 25 de março de 2024 às 10h28
     regex = /(\d{1,2}) de (\w+) de (\d{4})/;
     matches = dateStr.match(regex);
     if (matches) {
