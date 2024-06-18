@@ -8,7 +8,7 @@ const sites = [
         url: 'https://www.agenciamestre.com/categoria/seo/',
         linkSelector: '.titulo-post a',
         titleSelector: 'h1.mobile_title',
-        dateSelector: 'div.user-name-post p span i time',
+        dateSelector: 'div.user-name-post span.single-post-icon time',
         contentSelector: 'div.post-content',
         dateFormat: 'datetime'
     },
@@ -17,7 +17,7 @@ const sites = [
         url: 'https://www.agenciamestre.com/categoria/marketing-digital/',
         linkSelector: '.titulo-post a',
         titleSelector: 'h1.mobile_title',
-        dateSelector: 'div.user-name-post p span i time',
+        dateSelector: 'div.user-name-post span.single-post-icon time',
         contentSelector: 'div.post-content',
         dateFormat: 'datetime'
     },
