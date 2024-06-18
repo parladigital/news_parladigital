@@ -5,7 +5,7 @@
         {
             "name": "CNN Brasil",
             "url": "https://www.cnnbrasil.com.br/tudo-sobre/leis-trabalhistas/",
-            "linkSelector": "a.home_list_tag",
+            "linkSelector": "a.home__list__tag",
             "titleSelector": "h1.post__title",
             "dateSelector": "span.post__data",
             "contentSelector": "div.post__content"

@@ -11,12 +11,14 @@ function parseDate(dateStr) {
         julho: '07', agosto: '08', setembro: '09', outubro: '10', novembro: '11', dezembro: '12'
     };
 
-    let regex = /(\d{2})\/(\d{2})\/(\d{4}) às \d{2}:\d{2}/;
+    // Formato: dd/MM/yyyy HH:mm
+    let regex = /(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/;
     let matches = dateStr.match(regex);
     if (matches) {
-        return new Date(`${matches[3]}-${matches[2]}-${matches[1]}`);
+        return new Date(`${matches[3]}-${matches[2]}-${matches[1]}T${matches[4]}:${matches[5]}`);
     }
 
+    // Formato: dd de MMMM de yyyy
     regex = /(\d{1,2}) de (\w+) de (\d{4})/;
     matches = dateStr.match(regex);
     if (matches) {
