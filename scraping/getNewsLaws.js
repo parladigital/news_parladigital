@@ -47,7 +47,7 @@ async function scrapeNews() {
     });
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg';
-    const rangeName = 'news_marketing!A2:E';
+    const rangeName = 'news_labor_rights!A2:E';
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
