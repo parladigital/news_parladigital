@@ -31,9 +31,7 @@ jobs:
 
     - name: Set up Google credentials
       run: |
-        echo "$GOOGLE_APPLICATION_CREDENTIALS" > api/electric-wave-426309-u0-1bd8b45883b7.json
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        printf "%s" "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
 
     - name: Run scraping scripts
       run: |
