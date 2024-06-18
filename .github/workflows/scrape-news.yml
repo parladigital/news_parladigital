@@ -31,7 +31,7 @@ jobs:
 
     - name: Set up Google credentials
       run: |
-        printf "%s" "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
+        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
 
     - name: Run scraping scripts
       run: |
@@ -39,7 +39,7 @@ jobs:
           node $script || exit 1
         done
       env:
-        GOOGLE_APPLICATION_CREDENTIALS: api/electric-wave-426309-u0-1bd8b45883b7.json
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/api/electric-wave-426309-u0-1bd8b45883b7.json
 
     - name: Upload error logs
       if: failure()
