@@ -1,21 +1,32 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('../config/scrapeConfigLaws.json');
+const config = require('../config/scrapeConfig.json');
 
 function parseDate(dateStr) {
+    // Tentativa de capturar e converter datas ISO e formatos brasileiros diretamente
     let date = new Date(dateStr);
     if (!isNaN(date.getTime())) return date;
 
+    // Tentativa de extrair datas de formatos textuais mais complexos
     const months = {
         janeiro: '01', fevereiro: '02', março: '03', abril: '04', maio: '05', junho: '06',
         julho: '07', agosto: '08', setembro: '09', outubro: '10', novembro: '11', dezembro: '12'
     };
-    const regex = /(\d{1,2}) de (\w+) de (\d{4})/;
-    const matches = dateStr.match(regex);
+
+    // Formato: 09/02/2024 às 10:46
+    let regex = /(\d{2})\/(\d{2})\/(\d{4}) às \d{2}:\d{2}/;
+    let matches = dateStr.match(regex);
     if (matches) {
-        const year = matches[3];
-        const month = months[matches[2].toLowerCase()];
+        return new Date(`${matches[3]}-${matches[2]}-${matches[1]}`);
+    }
+
+    // Formato: 25 de março de 2024 às 10h28
+    regex = /(\d{1,2}) de (\w+) de (\d{4})/;
+    matches = dateStr.match(regex);
+    if (matches) {
         const day = matches[1];
+        const month = months[matches[2].toLowerCase()];
+        const year = matches[3];
         return new Date(`${year}-${month}-${day}`);
     }
 
@@ -89,7 +100,7 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
 
             console.log(`Title: ${title}, Date: ${dateStr}, Content: ${content.substring(0, 50)}...`);
 
-            const newsDate = parseDate(dateStr);
+            const newsDate = parseDate(dateStr.split(' | ')[0]);
             console.log(`Converted Date: ${newsDate}`);
             if (newsDate !== 'Invalid Date' && newsDate >= sixMonthsAgo) {
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
