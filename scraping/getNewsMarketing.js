@@ -21,6 +21,51 @@ const sites = [
         contentSelector: 'div.post-content',
         dateFormat: 'datetime'
     },
+    {
+        name: 'Agencia Tribo - Marketing Digital',
+        url: 'https://agenciatribo.com.br/conteudo/marketing-digital/',
+        linkSelector: '.elementor-post__title a',
+        titleSelector: 'h1.elementor-heading-title',
+        dateSelector: 'span.elementor-post-info__item--type-date',
+        contentSelector: 'div.elementor-widget-container',
+        dateFormat: 'datetime'
+    },
+    {
+        name: 'Agencia Tribo - SEO',
+        url: 'https://agenciatribo.com.br/conteudo/seo/',
+        linkSelector: '.elementor-post__title a',
+        titleSelector: 'h1.elementor-heading-title',
+        dateSelector: 'span.elementor-post-info__item--type-date',
+        contentSelector: 'div.elementor-widget-container',
+        dateFormat: 'datetime'
+    },
+    {
+        name: 'Agencia Tribo - Inbound',
+        url: 'https://agenciatribo.com.br/conteudo/inbound-marketing/',
+        linkSelector: '.elementor-post__title a',
+        titleSelector: 'h1.elementor-heading-title',
+        dateSelector: 'span.elementor-post-info__item--type-date',
+        contentSelector: 'div.elementor-widget-container',
+        dateFormat: 'datetime'
+    },
+    {
+        name: 'Sem Rush - Marketing',
+        url: 'https://pt.semrush.com/blog/category/marketing/',
+        linkSelector: '.sc-bUhFKy',
+        titleSelector: 'h1.sc-kLwhqv',
+        dateSelector: 'span.sc-kLwhqv [data-test="date"]',
+        contentSelector: 'div.sc-bdvvtL',
+        dateFormat: 'text'
+    },
+    {
+        name: 'Sem Rush - SEO',
+        url: 'https://pt.semrush.com/blog/category/seo/',
+        linkSelector: '.sc-bUhFKy',
+        titleSelector: 'h1.sc-kLwhqv',
+        dateSelector: 'span.sc-kLwhqv [data-test="date"]',
+        contentSelector: 'div.sc-bdvvtL',
+        dateFormat: 'text'
+    },
 ];
 
 async function scrapeNews() {
@@ -108,8 +153,14 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
 
                 const title = document.querySelector(site.titleSelector)?.innerText.trim();
                 let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
-                if (site.name === 'Agencia Mestre - SEO' && site.name === 'Agencia Mestre - Marketing Digital') {
+                if (site.name === 'Agencia Mestre - SEO' && site.name === 'Agencia Mestre - Marketing Digital' && site.name === 'Agencia Tribo - Marketing Digital' && site.name === 'Agencia Tribo - SEO' && site.name === 'Agencia Tribo - Inbound') {
                     dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime');
+                } else if (site.name.includes('Sem Rush')) {
+                    const match = dateStr.match(/(\w{3}) (\d{2}), (\d{4})/);
+                    if (match) {
+                        const [month, day, year] = [getMonthNumber(match[1]), match[2], match[3]];
+                        dateStr = `${year}-${month}-${day}`;
+                    }
                 }
                 const content = Array.from(document.querySelectorAll(site.contentSelector))
                     .map(el => el.innerText.trim()).join('\n');
