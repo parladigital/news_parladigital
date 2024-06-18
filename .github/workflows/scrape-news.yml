@@ -21,6 +21,9 @@ jobs:
     - name: Install dependencies
       run: npm install
 
+    - name: Fix vulnerabilities
+      run: npm audit fix --force
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -32,3 +35,14 @@ jobs:
       run: |
         echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
         node scraping/getNewsLaws.js
+
+    - name: Upload error logs
+      if: failure()
+      uses: actions/upload-artifact@v2
+      with:
+        name: error-logs
+        path: error.log
+
+    - name: Report success
+      if: success()
+      run: echo "Scraping completed successfully."

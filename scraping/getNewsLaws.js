@@ -55,7 +55,7 @@ async function scrapeNews() {
         headless: 'new',
         args: ['--no-sandbox'],
         defaultViewport: null,
-        timeout: 120000
+        timeout: 300000 // Aumenta o timeout para 300 segundos
     });
 
     const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
@@ -73,7 +73,11 @@ async function scrapeNews() {
 
     for (const site of sites) {
         console.log(`Scraping ${site.name}...`);
-        await scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews);
+        try {
+            await scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews);
+        } catch (error) {
+            console.error(`Error scraping ${site.name}:`, error);
+        }
     }
 
     await browser.close();
@@ -94,7 +98,7 @@ async function getExistingNews(sheets, spreadsheetId, rangeName) {
 
 async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
-    await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 60000 });
+    await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumenta o timeout para 90 segundos
     await delay(5000);
 
     const newsLinks = await page.$$eval(site.linkSelector, links => links.map(link => link.href));
@@ -106,34 +110,38 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
             continue;
         }
 
-        await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await delay(3000);
+        try {
+            await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumenta o timeout para 90 segundos
+            await delay(3000);
 
-        const [title, dateStr, content] = await page.evaluate((site) => {
-            const title = document.querySelector(site.titleSelector)?.innerText.trim();
-            let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
-            if (site.name === 'Exame') {
-                const match = dateStr.match(/Publicado em (\d{1,2}) de (\w+) de (\d{4}) às (\d{2}h\d{2})/);
-                if (match) {
-                    const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
-                    dateStr = `${year}-${month}-${day}`;
+            const [title, dateStr, content] = await page.evaluate((site) => {
+                const title = document.querySelector(site.titleSelector)?.innerText.trim();
+                let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
+                if (site.name === 'Exame') {
+                    const match = dateStr.match(/Publicado em (\d{1,2}) de (\w+) de (\d{4}) às (\d{2}h\d{2})/);
+                    if (match) {
+                        const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
+                        dateStr = `${year}-${month}-${day}`;
+                    }
                 }
-            }
-            const content = Array.from(document.querySelectorAll(site.contentSelector))
-                .map(el => el.innerText.trim()).join('\n');
-            return [title, dateStr, content];
-        }, site);
+                const content = Array.from(document.querySelectorAll(site.contentSelector))
+                    .map(el => el.innerText.trim()).join('\n');
+                return [title, dateStr, content];
+            }, site);
 
-        const newsDate = new Date(dateStr.split('/').reverse().join('-'));
-        if (newsDate >= sixMonthsAgo) {
-            const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
-            const request = {
-                spreadsheetId,
-                range: rangeName,
-                valueInputOption: 'USER_ENTERED',
-                resource: { values }
-            };
-            await sheets.spreadsheets.values.append(request);
+            const newsDate = new Date(dateStr.split('/').reverse().join('-'));
+            if (newsDate >= sixMonthsAgo) {
+                const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
+                const request = {
+                    spreadsheetId,
+                    range: rangeName,
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values }
+                };
+                await sheets.spreadsheets.values.append(request);
+            }
+        } catch (error) {
+            console.error(`Error processing news article at ${newsUrl}:`, error);
         }
     }
 }
