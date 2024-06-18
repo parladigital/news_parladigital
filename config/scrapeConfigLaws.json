@@ -1,6 +1,6 @@
 {
     "spreadsheetId": "1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg",
-    "rangeName": "news!A2:E",
+    "rangeName": "news_marketing!A2:E",
     "sites": [
         {
             "name": "CNN Brasil",
@@ -24,7 +24,7 @@
             "linkSelector": "a.touch-area",
             "titleSelector": "h1.headline-large",
             "dateSelector": "p.body-small",
-            "contentSelector": "#news-body p, #news-body div"
+            "contentSelector": "#news-body p"
         }
     ]
 }

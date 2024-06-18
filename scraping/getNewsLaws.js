@@ -31,7 +31,7 @@ function parseDate(dateStr) {
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: 'new', // Opte pela nova implementação headless
         args: ['--no-sandbox'],
         defaultViewport: null,
         timeout: 120000
@@ -90,7 +90,8 @@ async function scrapeSite(browser, site, sheets, sixMonthsAgo, existingNews) {
                 const title = document.querySelector(site.titleSelector)?.innerText.trim() || 'No title found';
                 const dateElement = document.querySelector(site.dateSelector);
                 const dateStr = dateElement ? dateElement.innerText.trim() : 'No date found';
-                const content = document.querySelector(site.contentSelector)?.innerText.trim() || 'No content found';
+                const contentElements = document.querySelectorAll(site.contentSelector);
+                const content = Array.from(contentElements).map(el => el.innerText.trim()).join('\n') || 'No content found';
                 return [title, dateStr, content];
             }, site);
 
