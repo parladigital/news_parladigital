@@ -10,7 +10,7 @@ const sites = [
         titleSelector: 'h1.post__title',
         dateSelector: 'span.post__data',
         contentSelector: 'div.post__content',
-        dateFormat: 'd mmm yyyy'
+        dateFormat: 'dd/MM/yyyy às HH:mm'
     },
     {
         name: 'G1',
@@ -19,7 +19,7 @@ const sites = [
         titleSelector: 'h1.content-head__title',
         dateSelector: 'time',
         contentSelector: 'div.mc-article-body',
-        dateFormat: 'd mmm yyyy'
+        dateFormat: 'datetime'
     },
     {
         name: 'Exame',
@@ -31,24 +31,6 @@ const sites = [
         dateFormat: 'Publicado em d mmm yyyy às HH:mm'
     }
 ];
-
-function getMonthNumber(month) {
-    const months = {
-        'janeiro': '01',
-        'fevereiro': '02',
-        'março': '03',
-        'abril': '04',
-        'maio': '05',
-        'junho': '06',
-        'julho': '07',
-        'agosto': '08',
-        'setembro': '09',
-        'outubro': '10',
-        'novembro': '11',
-        'dezembro': '12'
-    };
-    return months[month.toLowerCase()];
-}
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
@@ -135,7 +117,14 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
 
                 const title = document.querySelector(site.titleSelector)?.innerText.trim();
                 let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
-                if (site.name === 'Exame') {
+                if (site.name === 'CNN Brasil') {
+                    const match = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (match) {
+                        dateStr = `${match[3]}-${match[2]}-${match[1]}`;
+                    }
+                } else if (site.name === 'G1') {
+                    dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime');
+                } else if (site.name === 'Exame') {
                     const match = dateStr.match(/Publicado em (\d{1,2}) de (\w+) de (\d{4}) às (\d{2}h\d{2})/);
                     if (match) {
                         const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
@@ -148,7 +137,7 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
             }, site);
 
             console.log(`Processed news from ${newsUrl} with title: ${title} and date: ${dateStr}`);
-            const newsDate = new Date(dateStr.split('/').reverse().join('-'));
+            const newsDate = new Date(dateStr);
             console.log(`Converted news date: ${newsDate}`);
             console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
             if (newsDate >= sixMonthsAgo) {
