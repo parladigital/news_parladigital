@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const { google } = require('googleapis');
-const config = require('../config/scrapeConfig.json');
+const config = require('../config/scrapeConfigLaws.json');
 
 function parseDate(dateStr) {
     let date = new Date(dateStr);
