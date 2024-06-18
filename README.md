@@ -1,14 +1,14 @@
 # Scraping de Notícias
- 
- Este projeto é uma ferramenta de web scraping que extrai notícias relacionadas a "leis trabalhistas" de vários sites e carrega os dados em uma planilha do Google Sheets para armazenamento de dados.
 
- ## Começando
+Este projeto é uma ferramenta de web scraping que extrai notícias relacionadas a "M2M e IoT" de vários sites e carrega os dados em uma planilha do Google Sheets para armazenamento de dados.
 
- ### Pré-requisitos
+## Começando
 
- - Node.js instalado na sua máquina.
- - Um projeto no Google Cloud Platform com a API do Google Sheets habilitada.
- - Arquivo JSON de credenciais da conta de serviço para a API do Google Sheets.
+### Pré-requisitos
+
+- Node.js instalado na sua máquina.
+- Um projeto no Google Cloud Platform com a API do Google Sheets habilitada.
+- Arquivo JSON de credenciais da conta de serviço para a API do Google Sheets.
 
 ### Instalação
 
@@ -34,18 +34,18 @@
 Para executar o script e começar a capturar notícias, use o seguinte comando:
 
 ```sh
-node scraping/getNewsLaws.js
+node scraping/getNewsMarketing.js
 ```
 
 # Como o Código Funciona
 ## Visão geral
 O Script realiza os seguintes passos:
 1. **Configuração**:
-   - Inicializa o puppeteer para controlar um navegador headless.
+   - Inicializa o Puppeteer para controlar um navegador headless.
    - Autentica com a API do Google Sheets usando as credenciais da conta de serviço.
 
 2. **Scraiping:**
-   - Faz scraping das notícias dos sites especificados (CNN Brasil, G1, Exame, TST).
+   - Faz scraping das notícias dos sites especificados (IoT Now, IoT For All, Exame, Coin Telegraph, Tec Mundo).
    - Extrai títulos dos artigos, datas de publicação e conteúdo.
    - Filtra artigos publicados nos últimos seis meses.
    - Evita duplicatas ao verificar se a notícia já está na planilha.
@@ -59,11 +59,17 @@ O Script realiza os seguintes passos:
    - O script inicializa o puppeteer para controlar um navegador headless:
 
 ```sh
-const browser = await puppeteer.launch({ headless: true });
+const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox'],
+    defaultViewport: null,
+    timeout: 300000 // Aumenta o timeout para 300 segundos
+});
 ```
    - Em seguida, ele autentica com a API do Google Sheets usando as credenciais da conta de serviço fornecidas:
 
 ```sh
+const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets']
@@ -72,16 +78,16 @@ const sheets = google.sheets({ version: 'v4', auth });
 ```
 
 2. **Scraping**
-O script contém funções para fazer scraping de notícias de diferentes sites. Aqui está um exemplo da função para a CNN Brasil:
+O script contém funções para fazer scraping de notícias de diferentes sites. Aqui está um exemplo da função para IoT Now:
 
 ```sh
-async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelector, contentSelector, source, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
+async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumenta o timeout para 90 segundos
     await delay(5000);
 
-    const newsLinks = await page.$$eval(linkSelector, links => links.map(link => link.href));
-    console.log(`${source} news links found:`, newsLinks.length);
+    const newsLinks = await page.$$eval(site.linkSelector, links => links.map(link => link.href));
+    console.log(`${site.name} news links found:`, newsLinks.length);
 
     for (const newsUrl of newsLinks) {
         if (existingNews.includes(newsUrl)) {
@@ -89,26 +95,114 @@ async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelecto
             continue;
         }
 
-        await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await delay(3000);
+        try {
+            await page.goto(newsUrl, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumenta o timeout para 90 segundos
+            await delay(3000);
 
-        const [title, dateStr, content] = await page.evaluate((titleSelector, dateSelector, contentSelector) => {
-            const title = document.querySelector(titleSelector)?.innerText.trim();
-            const dateStr = document.querySelector(dateSelector)?.getAttribute('datetime') || document.querySelector(dateSelector)?.innerText.trim().split(' ')[0];
-            const content = document.querySelector(contentSelector)?.innerText.trim();
-            return [title, dateStr, content];
-        }, titleSelector, dateSelector, contentSelector);
+            const [title, dateStr, content] = await page.evaluate((site) => {
+                function getMonthNumber(month) {
+                    const months = {
+                        'janeiro': '01',
+                        'fevereiro': '02',
+                        'março': '03',
+                        'abril': '04',
+                        'maio': '05',
+                        'junho': '06',
+                        'julho': '07',
+                        'agosto': '08',
+                        'setembro': '09',
+                        'outubro': '10',
+                        'novembro': '11',
+                        'dezembro': '12',
+                        'jan': '01',
+                        'feb': '02',
+                        'mar': '03',
+                        'apr': '04',
+                        'may': '05',
+                        'jun': '06',
+                        'jul': '07',
+                        'aug': '08',
+                        'sep': '09',
+                        'oct': '10',
+                        'nov': '11',
+                        'dec': '12',
+                        'january': '01',
+                        'february': '02',
+                        'march': '03',
+                        'april': '04',
+                        'may': '05',
+                        'june': '06',
+                        'july': '07',
+                        'august': '08',
+                        'september': '09',
+                        'october': '10',
+                        'november': '11',
+                        'december': '12'
+                    };
+                    return months[month.toLowerCase()];
+                }
 
-        const newsDate = new Date(dateStr.split('/').reverse().join('-'));
-        if (newsDate >= sixMonthsAgo) {
-            const values = [[source, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
-            const request = {
-                spreadsheetId,
-                range: rangeName,
-                valueInputOption: 'USER_ENTERED',
-                resource: { values }
-            };
-            await sheets.spreadsheets.values.append(request);
+                const title = document.querySelector(site.titleSelector)?.innerText.trim();
+                let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
+
+                if (site.name === 'IoT Now' || site.name === 'IoT For All') {
+                    const match = dateStr.match(/(\w+) (\d{2}), (\d{4})/);
+                    if (match) {
+                        const [month, day, year] = [getMonthNumber(match[1]), match[2], match[3]];
+                        dateStr = `${year}-${month}-${day}`;
+                    }
+                } else if (site.name === 'Exame') {
+                    const match = dateStr.match(/Publicado em (\d{1,2}) de (\w+) de (\d{4}) às (\d{2}h\d{2})/);
+                    if (match) {
+                        const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
+                        dateStr = `${year}-${month}-${day}`;
+                    }
+                } else if (site.name === 'Coin telegraph') {
+                    const match = dateStr.match(/(\d{2}) (\w{3}) (\d{4})/);
+                    if (match) {
+                        const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
+                        dateStr = `${year}-${month}-${day}`;
+                    }
+                } else if (site.name === 'Tec Mundo') {
+                    const match = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (match) {
+                        dateStr = `${match[3]}-${match[2]}-${match[1]}`;
+                    }
+                }
+
+                const content = Array.from(document.querySelectorAll(site.contentSelector))
+                    .map(el => el.innerText.trim()).join('\n');
+                return [title, dateStr, content];
+            }, site);
+
+            console.log(`Processed news from ${newsUrl} with title: ${title} and date: ${dateStr}`);
+            const newsDate = new Date(dateStr);
+            if (isNaN(newsDate.getTime())) {
+                console.log(`Skipping news from ${newsUrl} due to invalid date format: ${dateStr}`);
+                continue;
+            }
+
+            console.log(`Converted news date: ${newsDate}`);
+            console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
+            if (newsDate >= sixMonthsAgo) {
+                if (content.length > 50000) {
+                    console.log(`Skipping news from ${newsUrl} due to content length exceeding 50000 characters.`);
+                    continue;
+                }
+                const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
+                const request = {
+                    spreadsheetId,
+                    range: rangeName,
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values }
+                };
+                await sheets.spreadsheets.values.append(request);
+                console.log(`Added news to spreadsheet: ${title}`);
+            } else {
+                console.log(`News from ${newsUrl} is older than six months.`);
+            }
+        } catch (error) {
+            console.error(`Error processing news article at ${newsUrl}:`, error);
         }
     }
 }
@@ -117,7 +211,7 @@ async function scrapeSite(browser, url, linkSelector, titleSelector, dateSelecto
 3. **Armazenamento de Dados**
 O script carrega os dados extraídos no Google Sheets:
 ```sh
-const values = [['Exame', `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
+const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
 const request = {
     spreadsheetId,
     range: rangeName,
@@ -151,16 +245,57 @@ const sheets = google.sheets({ version: 'v4', auth });
 ```
 
 # Modificando o Script para Outros Sites
-Para adicionar suporte a outros sites de notícias, siga estes passos:
-
-1. Identifique a estrutura HTML do site alvo.
-2. Crie uma nova função de scraping ou modifique uma existente para extrair os dados necessários.
-3. Atualize a função "scrapeNews" para incluir o novo site.
+Para adicionar suporte a outros sites de notícias, atualize o array sites com a estrutura HTML do novo site. Aqui está um exemplo do array sites:
 
 Exemplo:
 ```sh
-console.log('Scraping NewSite...');
-await scrapeSite(browser, 'https://www.newsite.com/news', 'a.news-link', 'h1.news-title', 'time.news-date', 'div.news-content', 'NewSite', sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews);
+const sites = [
+    {
+        name: 'IoT Now',
+        url: 'https://www.iot-now.com/news/',
+        linkSelector: 'h2.category__title a',
+        titleSelector: 'h1.entry-title',
+        dateSelector: 'time.entry-date',
+        contentSelector: 'div.article__content',
+        dateFormat: 'text'
+    },
+    {
+        name: 'IoT For All',
+        url: 'https://www.iotforall.com/articles',
+        linkSelector: 'a.vari_filter_inner',
+        titleSelector: 'h1.ih1_seo_heading',
+        dateSelector: 'time.entry-date',
+        contentSelector: 'div.td-post-content',
+        dateFormat: 'text'
+    },
+    {
+        name: 'Exame',
+        url: 'https://exame.com/noticias-sobre/internet-das-coisas-iot/',
+        linkSelector: 'a.touch-area',
+        titleSelector: 'h1.headline-large',
+        dateSelector: 'p.body-small',
+        contentSelector: '#news-body p, #news-body div',
+        dateFormat: 'Publicado em d mmmm yyyy às HH:mm'
+    },
+    {
+        name: 'Coin telegraph',
+        url: 'https://br.cointelegraph.com/tags/internet-of-things',
+        linkSelector: 'a.post-card-inline__title-link',
+        titleSelector: 'h1.post__title',
+        dateSelector: '.post-meta__publish-date time',
+        contentSelector: 'div.post-content relative',
+        dateFormat: 'text'
+    },
+    {
+        name: 'Tec Mundo',
+        url: 'https://www.tecmundo.com.br/internet-das-coisas',
+        linkSelector: '.tec--card__title__link',
+        titleSelector: 'h1.tec--article__header__title',
+        dateSelector: '#js-article-date strong',
+        contentSelector: 'div.tec--article__body',
+        dateFormat: 'datetime'
+    },
+];
 ```
 
 # Configuração do Cron Job com GitHub Actions
@@ -171,7 +306,7 @@ name: Scrape News
 
 on:
   schedule:
-    - cron: '0 11 * * *' # 8h da manhã no horário UTC (5h da manhã no horário de Brasília)
+    - cron: '0 11 * * *'
   workflow_dispatch:
 
 jobs:
@@ -190,6 +325,9 @@ jobs:
     - name: Install dependencies
       run: npm install
 
+    - name: Fix vulnerabilities
+      run: npm audit fix --force
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -198,7 +336,20 @@ jobs:
     - name: Run scraping script
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-      run: node scraping/getNewsLaws.js
+      run: |
+        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
+        node scraping/getNewsIotM2m.js
+
+    - name: Upload error logs
+      if: failure()
+      uses: actions/upload-artifact@v2
+      with:
+        name: error-logs
+        path: error.log
+
+    - name: Report success
+      if: success()
+      run: echo "Scraping completed successfully."
 ```
 
 # Acessando a API
