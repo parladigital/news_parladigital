@@ -108,19 +108,8 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
 
                 const title = document.querySelector(site.titleSelector)?.innerText.trim();
                 let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
-                if (site.name === 'CNN Brasil') {
-                    const match = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-                    if (match) {
-                        dateStr = `${match[3]}-${match[2]}-${match[1]}`;
-                    }
-                } else if (site.name === 'G1') {
+                if (site.name === 'Agencia Mestre - SEO' && site.name === 'Agencia Mestre - Marketing Digital') {
                     dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime');
-                } else if (site.name === 'Exame') {
-                    const match = dateStr.match(/Publicado em (\d{1,2}) de (\w+) de (\d{4}) às (\d{2}h\d{2})/);
-                    if (match) {
-                        const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
-                        dateStr = `${year}-${month}-${day}`;
-                    }
                 }
                 const content = Array.from(document.querySelectorAll(site.contentSelector))
                     .map(el => el.innerText.trim()).join('\n');
