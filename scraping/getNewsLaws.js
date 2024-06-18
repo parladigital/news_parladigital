@@ -32,24 +32,6 @@ const sites = [
     }
 ];
 
-function getMonthNumber(month) {
-    const months = {
-        'janeiro': '01',
-        'fevereiro': '02',
-        'março': '03',
-        'abril': '04',
-        'maio': '05',
-        'junho': '06',
-        'julho': '07',
-        'agosto': '08',
-        'setembro': '09',
-        'outubro': '10',
-        'novembro': '11',
-        'dezembro': '12'
-    };
-    return months[month.toLowerCase()];
-}
-
 async function scrapeNews() {
     const browser = await puppeteer.launch({
         headless: 'new',
@@ -115,6 +97,24 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
             await delay(3000);
 
             const [title, dateStr, content] = await page.evaluate((site) => {
+                function getMonthNumber(month) {
+                    const months = {
+                        'janeiro': '01',
+                        'fevereiro': '02',
+                        'março': '03',
+                        'abril': '04',
+                        'maio': '05',
+                        'junho': '06',
+                        'julho': '07',
+                        'agosto': '08',
+                        'setembro': '09',
+                        'outubro': '10',
+                        'novembro': '11',
+                        'dezembro': '12'
+                    };
+                    return months[month.toLowerCase()];
+                }
+
                 const title = document.querySelector(site.titleSelector)?.innerText.trim();
                 let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
                 if (site.name === 'Exame') {
@@ -129,6 +129,7 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
                 return [title, dateStr, content];
             }, site);
 
+            console.log(`Processed news from ${newsUrl} with title: ${title}`);
             const newsDate = new Date(dateStr.split('/').reverse().join('-'));
             if (newsDate >= sixMonthsAgo) {
                 const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
@@ -139,6 +140,9 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
                     resource: { values }
                 };
                 await sheets.spreadsheets.values.append(request);
+                console.log(`Added news to spreadsheet: ${title}`);
+            } else {
+                console.log(`News from ${newsUrl} is older than six months.`);
             }
         } catch (error) {
             console.error(`Error processing news article at ${newsUrl}:`, error);
