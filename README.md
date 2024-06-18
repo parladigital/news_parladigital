@@ -301,6 +301,22 @@ const sites = [
 # Configuração do Cron Job com GitHub Actions
  O cron job está configurado para rodar automaticamente todos os dias às 8h da manhã no horário UTC (5h da manhã no horário de Brasília). Aqui está o código do workflow do GitHub Actions:
 
+ Explicação
+ 1. Checkout repository: Faz o checkout do repositório.
+ 2. Setup Node.js: Configura o Node.js com a versão 16.
+ 3. Install dependencies: Instala as dependências listadas no package.json.
+ 4. Fix vulnerabilities: Executa npm audit fix --force para corrigir vulnerabilidades.
+ 5. Install system dependencies: Instala as dependências do sistema necessárias para rodar o Puppeteer.
+ 6. Set up Google credentials: Configura as credenciais da API do Google Sheets usando o segredo armazenado no GitHub.
+ 7. Run scraping scripts: Itera sobre todos os arquivos .js dentro da pasta scraping e executa cada um deles. Se algum script falhar, o job é interrompido (|| exit 1).
+ 8. Upload error logs: Se ocorrer uma falha, faz upload dos logs de erro.
+ 9. Report success: Se todos os scripts forem executados com sucesso, imprime uma mensagem de sucesso.
+
+### Garantindo Execução Forçada
+Para garantir que os scripts sempre rodem, adicionamos || exit 1 ao comando que executa cada script. Isso garante que, se algum script falhar, o job será interrompido, forçando a verificação e correção do problema.
+
+Com essa configuração, qualquer novo script adicionado à pasta scraping será automaticamente executado pelo workflow sem necessidade de modificar o arquivo YAML.
+
 ```sh
 name: Scrape News
 
@@ -333,12 +349,18 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libnss3-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon-x11-0 libxcomposite1 libxrandr2 libgbm-dev
 
-    - name: Run scraping script
+    - name: Set up Google credentials
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+      run: echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
+
+    - name: Run scraping scripts
       run: |
-        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
-        node scraping/getNewsIotM2m.js
+        for script in scraping/*.js; do
+          node $script || exit 1
+        done
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: api/electric-wave-426309-u0-1bd8b45883b7.json
 
     - name: Upload error logs
       if: failure()
