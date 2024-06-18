@@ -6,7 +6,7 @@ const sites = [
     {
         name: 'IoT Now',
         url: 'https://www.iot-now.com/news/',
-        linkSelector: 'h2.category__title',
+        linkSelector: 'h2.category__title a',
         titleSelector: 'h1.entry-title',
         dateSelector: 'time.entry-date',
         contentSelector: 'div.article__content',
@@ -16,7 +16,7 @@ const sites = [
         name: 'IoT For All',
         url: 'https://www.iotforall.com/articles',
         linkSelector: 'a.vari_filter_inner',
-        titleSelector: 'h1.ih1_seo_heading descus_title',
+        titleSelector: 'h1.ih1_seo_heading',
         dateSelector: 'time.entry-date',
         contentSelector: 'div.td-post-content',
         dateFormat: 'text'
@@ -28,12 +28,12 @@ const sites = [
         titleSelector: 'h1.headline-large',
         dateSelector: 'p.body-small',
         contentSelector: '#news-body p, #news-body div',
-        dateFormat: 'Publicado em d mmm yyyy às HH:mm'
+        dateFormat: 'Publicado em d mmmm yyyy às HH:mm'
     },
     {
         name: 'Coin telegraph',
         url: 'https://br.cointelegraph.com/tags/internet-of-things',
-        linkSelector: '.post-card-inline__header a',
+        linkSelector: 'a.post-card-inline__title-link',
         titleSelector: 'h1.post__title',
         dateSelector: '.post-meta__publish-date time',
         contentSelector: 'div.post-content relative',
@@ -52,7 +52,7 @@ const sites = [
 
 async function scrapeNews() {
     const browser = await puppeteer.launch({
-        headless: 'new',
+        headless: true,
         args: ['--no-sandbox'],
         defaultViewport: null,
         timeout: 300000 // Aumenta o timeout para 300 segundos
@@ -180,6 +180,11 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
 
             console.log(`Processed news from ${newsUrl} with title: ${title} and date: ${dateStr}`);
             const newsDate = new Date(dateStr);
+            if (isNaN(newsDate.getTime())) {
+                console.log(`Skipping news from ${newsUrl} due to invalid date format: ${dateStr}`);
+                continue;
+            }
+
             console.log(`Converted news date: ${newsDate}`);
             console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
             if (newsDate >= sixMonthsAgo) {
