@@ -21,12 +21,15 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libnss3-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon-x11-0 libxcomposite1 libxrandr2 libgbm-dev
-    - name: Run scraping script
+    - name: Run scraping scripts
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
       run: |
         echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
-        node scraping/getNewsMarketing.js
+        for script in scraping/*.js; do
+          echo "Running $script"
+          node $script
+        done
     - name: Upload error logs
       if: failure()
       uses: actions/upload-artifact@v2
