@@ -29,17 +29,18 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libnss3-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon-x11-0 libxcomposite1 libxrandr2 libgbm-dev
 
-    - name: Set up Google credentials
+    - name: Decode and save credentials
       run: |
-        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" | base64 --decode > api/electric-wave-426309-u0-1bd8b45883b7.json
+        mkdir -p api
+        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
 
     - name: Run scraping scripts
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: api/electric-wave-426309-u0-1bd8b45883b7.json
       run: |
         for script in scraping/*.js; do
           node $script || exit 1
         done
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/api/electric-wave-426309-u0-1bd8b45883b7.json
 
     - name: Upload error logs
       if: failure()
