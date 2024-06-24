@@ -83,7 +83,7 @@ async function scrapeNews() {
     });
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg';
-    const rangeName = 'news_marketing!A2:E';
+    const rangeName = 'news_marketing!A2:F';
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -188,7 +188,10 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
                     console.log(`Skipping news from ${newsUrl} due to content length exceeding 50000 characters.`);
                     continue;
                 }
-                const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, newsUrl, title, content]];
+                const now = new Date();
+                const addedDate = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+                const values = [[site.name, `${newsDate.getDate()}/${newsDate.getMonth() + 1}/${newsDate.getFullYear()}`, addedDate, newsUrl, title, content]];
+                
                 const request = {
                     spreadsheetId,
                     range: rangeName,
