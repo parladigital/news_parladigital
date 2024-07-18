@@ -66,8 +66,8 @@ async function scrapeNews() {
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg';
     const rangeName = 'news_m2m_iot!A2:F';
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);    
 
     const existingNews = await getExistingNews(sheets, spreadsheetId, rangeName);
 
@@ -96,7 +96,7 @@ async function getExistingNews(sheets, spreadsheetId, rangeName) {
     return rows.map(row => row[2]);
 }
 
-async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
+async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yesterday, existingNews) {
     const page = await browser.newPage();
     await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumenta o timeout para 90 segundos
     await delay(5000);
@@ -198,8 +198,7 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
             }
 
             console.log(`Converted news date: ${newsDate}`);
-            console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
-            if (newsDate >= sixMonthsAgo) {
+            if (newsDate >= yesterday) {
                 if (content.length > 50000) {
                     console.log(`Skipping news from ${newsUrl} due to content length exceeding 50000 characters.`);
                     continue;
@@ -217,7 +216,7 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMo
                 await sheets.spreadsheets.values.append(request);
                 console.log(`Added news to spreadsheet: ${title}`);
             } else {
-                console.log(`News from ${newsUrl} is older than six months.`);
+                console.log(`News from ${newsUrl} is older than yesterday.`);
             }
         } catch (error) {
             console.error(`Error processing news article at ${newsUrl}:`, error);

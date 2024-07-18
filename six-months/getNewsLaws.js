@@ -4,68 +4,32 @@ const fs = require('fs');
 
 const sites = [
     {
-        name: 'Agencia Mestre - SEO',
-        url: 'https://www.agenciamestre.com/categoria/seo/',
-        linkSelector: '.titulo-post a',
-        titleSelector: 'h1.mobile_title',
-        dateSelector: 'div.user-name-post span.single-post-icon time',
-        contentSelector: 'div.post-content',
+        name: 'CNN Brasil',
+        url: 'https://www.cnnbrasil.com.br/tudo-sobre/leis-trabalhistas/',
+        linkSelector: 'a.home__list__tag',
+        titleSelector: 'h1.post__title',
+        dateSelector: 'span.post__data',
+        contentSelector: 'div.post__content',
+        dateFormat: 'dd/MM/yyyy às HH:mm'
+    },
+    {
+        name: 'G1',
+        url: 'https://g1.globo.com/tudo-sobre/clt/',
+        linkSelector: 'a.feed-post-link',
+        titleSelector: 'h1.content-head__title',
+        dateSelector: 'time',
+        contentSelector: 'div.mc-article-body',
         dateFormat: 'datetime'
     },
     {
-        name: 'Agencia Mestre - Marketing Digital',
-        url: 'https://www.agenciamestre.com/categoria/marketing-digital/',
-        linkSelector: '.titulo-post a',
-        titleSelector: 'h1.mobile_title',
-        dateSelector: 'div.user-name-post span.single-post-icon time',
-        contentSelector: 'div.post-content',
-        dateFormat: 'datetime'
-    },
-    {
-        name: 'Agencia Tribo - Marketing Digital',
-        url: 'https://agenciatribo.com.br/conteudo/marketing-digital/',
-        linkSelector: '.elementor-post__title a',
-        titleSelector: 'h1.elementor-heading-title',
-        dateSelector: 'span.elementor-post-info__item--type-date',
-        contentSelector: 'div.elementor-widget-container',
-        dateFormat: 'datetime'
-    },
-    {
-        name: 'Agencia Tribo - SEO',
-        url: 'https://agenciatribo.com.br/conteudo/seo/',
-        linkSelector: '.elementor-post__title a',
-        titleSelector: 'h1.elementor-heading-title',
-        dateSelector: 'span.elementor-post-info__item--type-date',
-        contentSelector: 'div.elementor-widget-container',
-        dateFormat: 'datetime'
-    },
-    {
-        name: 'Agencia Tribo - Inbound',
-        url: 'https://agenciatribo.com.br/conteudo/inbound-marketing/',
-        linkSelector: '.elementor-post__title a',
-        titleSelector: 'h1.elementor-heading-title',
-        dateSelector: 'span.elementor-post-info__item--type-date',
-        contentSelector: 'div.elementor-widget-container',
-        dateFormat: 'datetime'
-    },
-    {
-        name: 'Sem Rush - Marketing',
-        url: 'https://pt.semrush.com/blog/category/marketing/',
-        linkSelector: '.sc-htJRVC',
-        titleSelector: 'h1.sc-kLwhqv',
-        dateSelector: 'span.sc-kLwhqv [data-test="date"]',
-        contentSelector: 'div.sc-bdvvtL',
-        dateFormat: 'text'
-    },
-    {
-        name: 'Sem Rush - SEO',
-        url: 'https://pt.semrush.com/blog/category/seo/',
-        linkSelector: '.sc-bUhFKy',
-        titleSelector: 'h1.sc-kLwhqv',
-        dateSelector: 'span.sc-kLwhqv [data-test="date"]',
-        contentSelector: 'div.sc-bdvvtL',
-        dateFormat: 'text'
-    },
+        name: 'Exame',
+        url: 'https://exame.com/noticias-sobre/direitos-trabalhistas/',
+        linkSelector: 'a.touch-area',
+        titleSelector: 'h1.headline-large',
+        dateSelector: 'p.body-small',
+        contentSelector: '#news-body p, #news-body div',
+        dateFormat: 'Publicado em d mmm yyyy às HH:mm'
+    }
 ];
 
 async function scrapeNews() {
@@ -83,9 +47,9 @@ async function scrapeNews() {
     });
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg';
-    const rangeName = 'news_marketing!A2:F';
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    const rangeName = 'news_labor_rights!A2:F';
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const existingNews = await getExistingNews(sheets, spreadsheetId, rangeName);
 
@@ -114,7 +78,7 @@ async function getExistingNews(sheets, spreadsheetId, rangeName) {
     return rows.map(row => row[2]);
 }
 
-async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yesterday, existingNews) {
+async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
     await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumenta o timeout para 90 segundos
     await delay(5000);
@@ -165,12 +129,17 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yeste
 
                 const title = document.querySelector(site.titleSelector)?.innerText.trim();
                 let dateStr = document.querySelector(site.dateSelector)?.innerText.trim();
-                if (site.name === 'Agencia Mestre - SEO' && site.name === 'Agencia Mestre - Marketing Digital' && site.name === 'Agencia Tribo - Marketing Digital' && site.name === 'Agencia Tribo - SEO' && site.name === 'Agencia Tribo - Inbound') {
-                    dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime');
-                } else if (site.name.includes('Sem Rush')) {
-                    const match = dateStr.match(/(\w{3}) (\d{2}), (\d{4})/);
+                if (site.name === 'CNN Brasil') {
+                    const match = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
                     if (match) {
-                        const [month, day, year] = [getMonthNumber(match[1]), match[2], match[3]];
+                        dateStr = `${match[3]}-${match[2]}-${match[1]}`;
+                    }
+                } else if (site.name === 'G1') {
+                    dateStr = document.querySelector(site.dateSelector)?.getAttribute('datetime');
+                } else if (site.name === 'Exame') {
+                    const match = dateStr.match(/Publicado em (\d{1,2}) de (\w+) de (\d{4}) às (\d{2}h\d{2})/);
+                    if (match) {
+                        const [day, month, year] = [match[1], getMonthNumber(match[2]), match[3]];
                         dateStr = `${year}-${month}-${day}`;
                     }
                 }
@@ -182,7 +151,8 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yeste
             console.log(`Processed news from ${newsUrl} with title: ${title} and date: ${dateStr}`);
             const newsDate = new Date(dateStr);
             console.log(`Converted news date: ${newsDate}`);
-            if (newsDate >= yesterday) {
+            console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
+            if (newsDate >= sixMonthsAgo) {
                 if (content.length > 50000) {
                     console.log(`Skipping news from ${newsUrl} due to content length exceeding 50000 characters.`);
                     continue;
@@ -200,7 +170,7 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yeste
                 await sheets.spreadsheets.values.append(request);
                 console.log(`Added news to spreadsheet: ${title}`);
             } else {
-                console.log(`News from ${newsUrl} is older than yesterday.`);
+                console.log(`News from ${newsUrl} is older than six months.`);
             }
         } catch (error) {
             console.error(`Error processing news article at ${newsUrl}:`, error);

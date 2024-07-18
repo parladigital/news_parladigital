@@ -84,8 +84,8 @@ async function scrapeNews() {
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = '1BtE0RhK8AHlDWru9kt8MhI2mwQtS6RSU4_B9BYkTVkg';
     const rangeName = 'news_marketing!A2:F';
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const existingNews = await getExistingNews(sheets, spreadsheetId, rangeName);
 
@@ -114,7 +114,7 @@ async function getExistingNews(sheets, spreadsheetId, rangeName) {
     return rows.map(row => row[2]);
 }
 
-async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yesterday, existingNews) {
+async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, sixMonthsAgo, existingNews) {
     const page = await browser.newPage();
     await page.goto(site.url, { waitUntil: 'networkidle2', timeout: 90000 }); // Aumenta o timeout para 90 segundos
     await delay(5000);
@@ -182,7 +182,8 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yeste
             console.log(`Processed news from ${newsUrl} with title: ${title} and date: ${dateStr}`);
             const newsDate = new Date(dateStr);
             console.log(`Converted news date: ${newsDate}`);
-            if (newsDate >= yesterday) {
+            console.log(`Comparing news date with six months ago: ${sixMonthsAgo}`);
+            if (newsDate >= sixMonthsAgo) {
                 if (content.length > 50000) {
                     console.log(`Skipping news from ${newsUrl} due to content length exceeding 50000 characters.`);
                     continue;
@@ -200,7 +201,7 @@ async function scrapeSite(browser, site, sheets, spreadsheetId, rangeName, yeste
                 await sheets.spreadsheets.values.append(request);
                 console.log(`Added news to spreadsheet: ${title}`);
             } else {
-                console.log(`News from ${newsUrl} is older than yesterday.`);
+                console.log(`News from ${newsUrl} is older than six months.`);
             }
         } catch (error) {
             console.error(`Error processing news article at ${newsUrl}:`, error);
