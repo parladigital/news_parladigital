@@ -3,7 +3,6 @@ on:
   schedule:
     - cron: "0 11 * * *"
   workflow_dispatch:
-
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -14,13 +13,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "20"
+          node-version: "16"
 
       - name: Install dependencies
         run: npm install
 
       - name: Fix vulnerabilities
-        run: npm audit fix --force
+        run: npm audit fix
 
       - name: Install system dependencies
         run: |
@@ -34,23 +33,30 @@ jobs:
           echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
           for script in scraping/*.js; do
             echo "Running $script"
-            node $script || echo "Error running $script" >> error.log
+            node $script
           done
           for script in idea/*.js; do
             echo "Running $script"
-            node $script || echo "Error running $script" >> error.log
-          done
+            node $script
 
       - name: Upload error logs
         if: failure()
-        uses: actions/upload-artifact@v2
-        with:
-          name: error-logs
-          path: error.log
+        run: |
+          if [ -f error.log ]; then
+            echo "Uploading error logs..."
+            actions/upload-artifact@v2 --name error-logs --path error.log
+          else
+            echo "No error logs to upload."
+          fi
 
       - name: Save full logs
         if: failure()
-        run: cat error.log
+        run: |
+          if [ -f error.log ]; then
+            cat error.log
+          else
+            echo "No error logs found."
+          fi
 
       - name: Report success
         if: success()
