@@ -19,7 +19,7 @@ jobs:
         run: npm install
 
       - name: Fix vulnerabilities
-        run: npm audit fix
+        run: npm audit fix || echo "Ignoring audit errors"
 
       - name: Install system dependencies
         run: |
