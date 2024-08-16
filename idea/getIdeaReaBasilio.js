@@ -36,7 +36,7 @@ async function gerarIdeias() {
     const response = await axios.post(
       openaiUrl,
       {
-        model: "text-davinci-004",
+        model: "gpt-4",
         prompt: prompt,
         max_tokens: 1000,
       },
