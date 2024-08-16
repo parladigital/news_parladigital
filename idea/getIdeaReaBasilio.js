@@ -32,22 +32,30 @@ async function gerarIdeias() {
 
     As ideias de post devem estar alinhadas com a missão, visão e valores da empresa, que incluem honestidade, transparência e empatia.
     `;
-  const response = await axios.post(
-    openaiUrl,
-    {
-      model: "text-davinci-004",
-      prompt: prompt,
-      max_tokens: 1000,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+  try {
+    const response = await axios.post(
+      openaiUrl,
+      {
+        model: "text-davinci-004",
+        prompt: prompt,
+        max_tokens: 1000,
       },
-    }
-  );
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-  return response.data.choices[0].text.trim();
+    return response.data.choices[0].text.trim();
+  } catch (error) {
+    console.error(
+      "Erro ao chamar a API do OpenAI:",
+      error.response ? error.response.data : error.message
+    );
+    throw new Error("Falha ao gerar ideias com a API do OpenAI");
+  }
 }
 
 // Função para verificar se a ideia é repetida
