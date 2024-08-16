@@ -36,7 +36,7 @@ async function gerarIdeias() {
     const response = await axios.post(
       openaiUrl,
       {
-        model: "gpt-4",
+        model: "gpt-3.5-turbo",
         prompt: prompt,
         max_tokens: 1000,
       },
