@@ -20,7 +20,8 @@ jobs:
 
       - name: Fix vulnerabilities
         run: |
-          npm audit fix --force || echo "Ignoring audit errors"
+          npm audit fix || echo "Ignoring audit errors"
+          npm audit fix --force || echo "Ignoring forced audit errors"
 
       - name: Install system dependencies
         run: |
@@ -34,11 +35,12 @@ jobs:
           echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
           for script in scraping/*.js; do
             echo "Running $script"
-            node $script
+            node $script || echo "Script $script failed, continuing with others."
           done
           for script in idea/*.js; do
             echo "Running $script"
-            node $script
+            node $script || echo "Script $script failed, continuing with others."
+          done
 
       - name: Upload error logs
         if: failure()

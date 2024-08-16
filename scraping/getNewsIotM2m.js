@@ -114,7 +114,7 @@ async function scrapeSite(
   existingNews
 ) {
   const page = await browser.newPage();
-  await page.goto(site.url, { waitUntil: "networkidle2", timeout: 90000 }); // Aumenta o timeout para 90 segundos
+  await page.goto(site.url, { waitUntil: "networkidle2", timeout: 90000 });
   await delay(5000);
 
   const newsLinks = await page.$$eval(site.linkSelector, (links) =>
@@ -129,7 +129,7 @@ async function scrapeSite(
     }
 
     try {
-      await page.goto(newsUrl, { waitUntil: "networkidle2", timeout: 90000 }); // Aumenta o timeout para 90 segundos
+      await page.goto(newsUrl, { waitUntil: "networkidle2", timeout: 90000 });
       await delay(3000);
 
       const [title, dateStr, content] = await page.evaluate((site) => {
