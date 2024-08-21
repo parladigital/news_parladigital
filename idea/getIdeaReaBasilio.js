@@ -17,27 +17,6 @@ const sheets = google.sheets({ version: "v4", auth });
 const spreadsheetId = "16956oAxKOXcV3-hqE4_AqTisN3_ZWfdukV7bkrQCrzw";
 const rangeName = "idea_rea_basilio!A2:D";
 
-// Função para verificar a cota restante
-async function verificarCota() {
-  try {
-    const response = await axios.get(
-      "https://api.openai.com/v1/dashboard/billing/usage",
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error(
-      "Erro ao verificar a cota da API do OpenAI:",
-      error.response ? error.response.data : error.message
-    );
-    throw new Error("Falha ao verificar a cota da API do OpenAI");
-  }
-}
-
 // Função para gerar ideias de posts e textos
 async function gerarIdeias() {
   const prompt = `
@@ -107,15 +86,6 @@ async function getExistingIdeas() {
 
 // Função principal
 async function main() {
-  // Verificar a cota disponível
-  const cota = await verificarCota();
-  if (cota.usage < cota.limit) {
-    console.log("Cota disponível para utilizar a API do OpenAI.");
-  } else {
-    console.log("Cota excedida. Saindo do processo.");
-    return;
-  }
-
   // Carregar ideias existentes
   const existingIdeas = await getExistingIdeas();
 
