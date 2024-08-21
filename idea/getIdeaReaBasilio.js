@@ -15,7 +15,28 @@ const auth = new google.auth.GoogleAuth({
 });
 const sheets = google.sheets({ version: "v4", auth });
 const spreadsheetId = "16956oAxKOXcV3-hqE4_AqTisN3_ZWfdukV7bkrQCrzw";
-const rangeName = "idea_rea_basilio!A2:D"; // Adiciona na aba específica
+const rangeName = "idea_rea_basilio!A2:D";
+
+// Função para verificar a cota restante
+async function verificarCota() {
+  try {
+    const response = await axios.get(
+      "https://api.openai.com/v1/dashboard/billing/usage",
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Erro ao verificar a cota da API do OpenAI:",
+      error.response ? error.response.data : error.message
+    );
+    throw new Error("Falha ao verificar a cota da API do OpenAI");
+  }
+}
 
 // Função para gerar ideias de posts e textos
 async function gerarIdeias() {
@@ -31,7 +52,7 @@ async function gerarIdeias() {
     7. Cidadania Italiana e Portuguesa: Autorização de Residência, Transcrição de Casamento, Reconhecimento de Sentença Estrangeira, Certificação e Autenticação de Documentos, Tradução de Documentos, Emissão de Inteiro Teor, Análise Jurídica da Pasta.
 
     As ideias de post devem estar alinhadas com a missão, visão e valores da empresa, que incluem honestidade, transparência e empatia.
-    `;
+  `;
   try {
     const response = await axios.post(
       openaiUrl,
@@ -54,7 +75,13 @@ async function gerarIdeias() {
       "Erro ao chamar a API do OpenAI:",
       error.response ? error.response.data : error.message
     );
-    throw new Error("Falha ao gerar ideias com a API do OpenAI");
+    if (error.response && error.response.data.code === "insufficient_quota") {
+      throw new Error(
+        "Cota da API do OpenAI excedida. Verifique o seu plano e detalhes de cobrança."
+      );
+    } else {
+      throw new Error("Falha ao gerar ideias com a API do OpenAI");
+    }
   }
 }
 
@@ -80,6 +107,15 @@ async function getExistingIdeas() {
 
 // Função principal
 async function main() {
+  // Verificar a cota disponível
+  const cota = await verificarCota();
+  if (cota.usage < cota.limit) {
+    console.log("Cota disponível para utilizar a API do OpenAI.");
+  } else {
+    console.log("Cota excedida. Saindo do processo.");
+    return;
+  }
+
   // Carregar ideias existentes
   const existingIdeas = await getExistingIdeas();
 
