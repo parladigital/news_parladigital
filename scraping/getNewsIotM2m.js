@@ -48,6 +48,24 @@ const sites = [
     contentSelector: "div.tec--article__body",
     dateFormat: "datetime",
   },
+  {
+    name: "IoT Business News",
+    url: "https://iotbusinessnews.com/category/business-news/",
+    linkSelector: ".cat-list-title a",
+    titleSelector: "h1.entry-title",
+    dateSelector: "div.entry-date",
+    contentSelector: "div.entry-content",
+    dateFormat: "text",
+  },
+  {
+    name: "RCR Wireless News",
+    url: "https://www.rcrwireless.com/internet-of-things",
+    linkSelector: "h3.td-module-title a",
+    titleSelector: "h1.tdb-title-text",
+    dateSelector: "div.td-fix-index.td-module-date",
+    contentSelector: "div.tdb-block-inner.td-fix-index",
+    dateFormat: "text",
+  },
 ];
 
 async function scrapeNews() {
