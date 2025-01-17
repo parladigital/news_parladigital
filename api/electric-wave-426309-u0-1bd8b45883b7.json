@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "electric-wave-426309-u0",
+  "private_key_id": "1bd8b45883b700b719e5a47db3a1a5ace9dd8d3e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCpqQZVgryHZUNw\nsyAuWqHBarHjl28DxUhEQXps/8EiGs028qwkXSUr2fF1KO0MCt9ZWV+uZt8Z1+1T\nG57aaThrlVM3Dlp3D7gDPpBVCSYmV78zCXYUbzmJxqKMulMA4Z2QDnvVUShyN2u3\nuJeVdDkh0Vb6VxXTs2F87royKVrA4QA+LXW2rX95E7OS6TCOjE+I0WZ6Evyu+kD+\niELu+LzfHPsIxwVe8bDcnc/3Bz4oxaZIhQZMtAvibhfL/TfapD8ob+GNXDTHNkKc\nD2czhlPjTn9ktp6bIB3aXUMrTdaNlyL2ioXk/yC5gjvEUV9TvY5/3l3by9gxH/ce\n1ouK16JBAgMBAAECggEAEtxzU5DN8Dhp+66yOm0BdAzuO0jDwvXM76ee2lzBZg74\nNu5aBE3lmr8nKHj1B2RzCY4VxL/zd/5JCDb3HT1a1Bz87A84r+lLsfKj3Yw/lT4m\nh6A65BEsYpx2SDJTlXK/jzsI+cFEv5PZMgq/sVIDIvcQlhKV3tvfj+HDSd3OlMgQ\nXYKbASbWrZz/nhYIsFlMM4js2jBUc5sjb9G+9Oi4RzFiFGKtPnEKsd2tYFio4rUz\nhulacKbtugDt+mpzN/KLa4u9YAqRE/PlBIOMxMQot8UcRQY9/VvdyNMbBrxG4fcX\nlwtZsaowWuQsjr9QZEiLkUjGGyMVe1m1H+TMIPYrNQKBgQDYg2g82Z1eSpLoEi6A\nLpjith4yjI1XC8p72ppZq/XUpyTxcp5IzlXzYd/Rr85qT0HruNIuhrYJqEVqI2dA\nrlZ9WyCQCY273oMRWmt+s9ERIpNMxt698dSye/g1MQlELqkAxZK8ji06jNsakGpj\ntEIwmxY7p4o6161l/QMk48u/vQKBgQDImiNK2Dy3PHtAsxoKlaiL1CCdagPfPzfr\nne+6hiSxkOLrVTd/ls8NliLRxHnC8dFNnWXB38CX5V4dHCm4lHeXpuG/BvvtPQep\nuiP5Eoxn2fB5EgqLdYixhaEQsFHrcZACFrj89rlfa7/Od2n11KoB+OdAWJlUh7Un\nDvo8RuIi1QKBgQDG14g3ujOIkTxx3aDPH/xQ2ajKC8MSmkWPkagHiqHudsK66+Tq\nQHU3XD/Nt4P+pmOINOjyyc0M+XkmjPUatgHAhpxVLDD6xNPicAQhDMuIzRQygsG1\n+A67DJdbYnl8IM4dY1XrzTdEenAO6WqLvtS7BvNYPfn5KHKbI85rZrmMkQKBgQCf\nNm8SZSNzTyaHyF6/zd5S9I7aQR1Hn9ZTRCvTv8n5wIPJwf3lXx2ArAuAr87wIZs8\nXdM4l801AY+7zPF0FSoCDCqZwgJLXafqVtlcQxN7DWelv+LsouFV/DhElZy/IIfq\nkHxMEco46Lz4MqC/wwUXwaRQ1sEDbR4jHOkQ1DWA7QKBgQCd2sW/L9n3jwc14ego\nlCSGlLDebsYj1ahWBRcO6c2H+irSqUxlBp4mDSXgpM0UtDXoBJ+38t8/SVNWijf/\nWmD+5vzjxFmaeD/Fs+qg09htcnQmzGzY5ZwGn4drFaWMHN6LVDBwsT/yn6dG5Af3\nFRM/ba5K5+ha34bkG4RsIMPnIQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "parla-digital@electric-wave-426309-u0.iam.gserviceaccount.com",
+  "client_id": "114225308301162376986",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/parla-digital%40electric-wave-426309-u0.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

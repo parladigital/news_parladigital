@@ -1,0 +1,1 @@
+Este README fornece uma documentação abrangente para o seu repositório, explicando como o código funciona, como configurá-lo e como modificá-lo para suportar outros sites. Também inclui instruções para usar a API do Google Sheets e os acessos necessários.

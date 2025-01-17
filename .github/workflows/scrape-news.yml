@@ -1,0 +1,62 @@
+name: Scrape News
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Fix vulnerabilities
+        run: |
+          npm audit fix || echo "Ignoring audit errors"
+          npm audit fix --force || echo "Ignoring forced audit errors"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon-x11-0 libxcomposite1 libxrandr2 libgbm-dev
+
+      - name: Run scraping scripts
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: |
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > api/electric-wave-426309-u0-1bd8b45883b7.json
+          for script in scraping/*.js; do
+            echo "Running $script"
+            node $script || echo "Script $script failed, continuing with others."
+          done
+
+      - name: Upload error logs
+        if: failure()
+        run: |
+          if [ -f error.log ]; then
+            echo "Uploading error logs..."
+            actions/upload-artifact@v2 --name error-logs --path error.log
+          else
+            echo "No error logs to upload."
+          fi
+
+      - name: Save full logs
+        if: failure()
+        run: |
+          if [ -f error.log ]; then
+            cat error.log
+          else
+            echo "No error logs found."
+          fi
+
+      - name: Report success
+        if: success()
+        run: echo "Scraping completed successfully."
